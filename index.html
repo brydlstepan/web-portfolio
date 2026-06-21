@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio under construction — something new is on the way.">
+  <title>BS / PFO · Coming Soon</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23fff'/%3E%3Crect x='10' y='10' width='12' height='12' rx='2' fill='%23000'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #000000;
+      --surface: #141414;
+      --text: #ffffff;
+      --muted: #888888;
+      --radius-lg: 20px;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      min-height: 100dvh;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .brand {
+      padding: 1.25rem 1.5rem 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      align-self: flex-start;
+    }
+
+    .brand__label {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    @property --glow-r {
+      syntax: "<integer>";
+      initial-value: 55;
+      inherits: false;
+    }
+
+    @property --glow-g {
+      syntax: "<integer>";
+      initial-value: 75;
+      inherits: false;
+    }
+
+    @property --glow-b {
+      syntax: "<integer>";
+      initial-value: 215;
+      inherits: false;
+    }
+
+    @property --accent-r {
+      syntax: "<integer>";
+      initial-value: 55;
+      inherits: false;
+    }
+
+    @property --accent-g {
+      syntax: "<integer>";
+      initial-value: 75;
+      inherits: false;
+    }
+
+    @property --accent-b {
+      syntax: "<integer>";
+      initial-value: 215;
+      inherits: false;
+    }
+
+    @keyframes breathe-color {
+      0%, 100% {
+        --glow-r: 55;
+        --glow-g: 75;
+        --glow-b: 215;
+      }
+    }
+
+    @keyframes breathe-accent {
+      0%, 100% {
+        --accent-r: 55;
+        --accent-g: 75;
+        --accent-b: 215;
+      }
+      50% {
+        --accent-r: 40;
+        --accent-g: 155;
+        --accent-b: 168;
+      }
+    }
+
+    .hero-wrap {
+      --mx: 50%;
+      --my: 50%;
+      --angle: 135deg;
+      --intensity: 0.4;
+      --glow-strength: 0.65;
+      --cursor-glow-strength: 0.24;
+      position: relative;
+      width: min(520px, 100%);
+      animation:
+        breathe-color 12s ease-in-out infinite,
+        breathe-accent 9s ease-in-out infinite;
+    }
+
+    .hero-glow-halo {
+      position: absolute;
+      inset: -56px;
+      border-radius: calc(var(--radius-lg) + 28px);
+      background: radial-gradient(
+        480px circle at 50% 50%,
+        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.35),
+        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.1) 50%,
+        transparent 72%
+      );
+      filter: blur(40px);
+      opacity: calc(0.55 * var(--glow-strength));
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-glow-ambient {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-lg);
+      background: radial-gradient(
+        420px circle at 50% 50%,
+        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.55),
+        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.22) 42%,
+        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.06) 62%,
+        transparent 78%
+      );
+      filter: blur(36px);
+      opacity: calc(0.9 * var(--glow-strength));
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-lg);
+      background: radial-gradient(
+        300px circle at var(--mx) var(--my),
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.55 * var(--intensity))),
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.22 * var(--intensity))) 38%,
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.06 * var(--intensity))) 58%,
+        transparent 75%
+      );
+      filter: blur(28px);
+      opacity: calc((0.45 + var(--intensity) * 0.55) * var(--glow-strength) * var(--cursor-glow-strength));
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .hero-wrap.is-active .hero-glow {
+      opacity: calc((0.65 + var(--intensity) * 0.35) * var(--glow-strength) * var(--cursor-glow-strength));
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      background: rgba(20, 20, 20, 0.38);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(
+        var(--angle),
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc((0.35 + var(--intensity) * 0.45) * var(--glow-strength))),
+        rgba(255, 255, 255, calc(0.08 * var(--glow-strength))) 40%,
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc((0.2 + var(--intensity) * 0.2) * var(--glow-strength))) 70%,
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc((0.28 + var(--intensity) * 0.35) * var(--glow-strength)))
+      );
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+      transition: background 0.15s ease;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        420px circle at var(--mx) var(--my),
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.18 * var(--intensity) * var(--glow-strength) * var(--cursor-glow-strength))),
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.05 * var(--intensity) * var(--glow-strength) * var(--cursor-glow-strength))) 50%,
+        transparent 65%
+      );
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.85;
+    }
+
+    .hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero__tag {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero__title {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero__text {
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .copyright a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .copyright a:hover {
+      color: var(--text);
+    }
+
+    .copyright {
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .hero-wrap {
+        --intensity: 0.45;
+        animation: none;
+        --glow-r: 55;
+        --glow-g: 75;
+        --glow-b: 215;
+        --accent-r: 55;
+        --accent-g: 75;
+        --accent-b: 215;
+      }
+
+      .hero-glow-ambient {
+        opacity: calc(0.75 * var(--glow-strength));
+      }
+    }
+  </style>
+</head>
+<body>
+  <p class="brand">brydlstepan <span class="brand__label">— PORTFOLIO</span></p>
+
+  <main>
+    <div class="hero-wrap">
+      <div class="hero-glow-halo" aria-hidden="true"></div>
+      <div class="hero-glow-ambient" aria-hidden="true"></div>
+      <div class="hero-glow" aria-hidden="true"></div>
+      <section class="hero">
+        <span class="hero__tag">Under construction</span>
+        <h1 class="hero__title">Something new is on its way.</h1>
+        <p class="hero__text">
+          Working on this in my spare time — a resource so scarce, scientists
+          are still debating whether it actually exists. Do check back. No rush.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <p class="copyright">&copy; <span id="year"></span> <a href="mailto:brydlstepan@gmail.com">brydlstepan@gmail.com</a></p>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    (function () {
+      const wrap = document.querySelector(".hero-wrap");
+      if (!wrap || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      let targetX = 0.5;
+      let targetY = 0.5;
+      let targetIntensity = 0.4;
+      let currentX = 0.5;
+      let currentY = 0.5;
+      let currentIntensity = 0.4;
+      let angle = 135;
+      let rafId = null;
+
+      function setVars(x, y, intensity, deg) {
+        wrap.style.setProperty("--mx", `${x * 100}%`);
+        wrap.style.setProperty("--my", `${y * 100}%`);
+        wrap.style.setProperty("--intensity", intensity.toFixed(3));
+        wrap.style.setProperty("--angle", `${deg}deg`);
+      }
+
+      function tick() {
+        currentX += (targetX - currentX) * 0.12;
+        currentY += (targetY - currentY) * 0.12;
+        currentIntensity += (targetIntensity - currentIntensity) * 0.1;
+        setVars(currentX, currentY, currentIntensity, angle);
+
+        if (
+          Math.abs(targetX - currentX) > 0.001 ||
+          Math.abs(targetY - currentY) > 0.001 ||
+          Math.abs(targetIntensity - currentIntensity) > 0.001
+        ) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          rafId = null;
+        }
+      }
+
+      function scheduleTick() {
+        if (!rafId) rafId = requestAnimationFrame(tick);
+      }
+
+      function updateFromPointer(clientX, clientY) {
+        const rect = wrap.getBoundingClientRect();
+        const x = (clientX - rect.left) / rect.width;
+        const y = (clientY - rect.top) / rect.height;
+        const cx = 0.5;
+        const cy = 0.5;
+        const dx = x - cx;
+        const dy = y - cy;
+        const dist = Math.hypot(dx, dy);
+
+        targetX = Math.min(Math.max(x, -0.15), 1.15);
+        targetY = Math.min(Math.max(y, -0.15), 1.15);
+        targetIntensity = Math.min(dist * 1.4 + 0.35, 1);
+        angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+        scheduleTick();
+      }
+
+      document.addEventListener("mousemove", (e) => {
+        wrap.classList.add("is-active");
+        updateFromPointer(e.clientX, e.clientY);
+      });
+
+      document.addEventListener("mouseleave", () => {
+        wrap.classList.remove("is-active");
+        targetIntensity = 0.4;
+        scheduleTick();
+      });
+    })();
+  </script>
+</body>
+</html>
