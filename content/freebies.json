@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ue-material-pack",
+    "title": "Starter Material Pack",
+    "description": "A small set of Unreal materials for blocking out environments. Free for personal and commercial use — replace with your own when the real pack is ready.",
+    "image": "assets/freebies/placeholders/pack.svg",
+    "url": "https://drive.google.com/",
+    "published": true,
+    "order": 1
+  },
+  {
+    "id": "grid-kit",
+    "title": "Layout Grid Kit",
+    "description": "Print and screen grid templates. Placeholder freebie until the real files are uploaded.",
+    "image": "assets/freebies/placeholders/grid.svg",
+    "url": "https://drive.google.com/",
+    "published": true,
+    "order": 2
+  }
+]

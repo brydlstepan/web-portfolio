@@ -1,0 +1,33 @@
+{
+  "brand": "brydlstepan",
+  "role": "Unreal Engine Dev / 3D Generalist",
+  "hero": {
+    "title": "Realtime worlds, still frames, and the odd website.",
+    "text": "I build environments, systems, and visuals in Unreal — and whatever else the brief needs. Spare time is theoretical; the work is not."
+  },
+  "about": "I'm a Czech Unreal Engine developer and 3D generalist. I like to make pretty things that run smooth. I'm mostly interested in realtime visualization, VR and technical stuff. I also dabble in graphics and in my free time I like to take photos on my trips.",
+  "portrait": "assets/about/portrait.png",
+  "cv": "assets/cv/Stepan-Brydl-CV.pdf",
+  "skills": [
+    { "id": "unreal", "name": "Unreal Engine", "level": 100 },
+    { "id": "ai-dev", "name": "AI Development", "level": 85 },
+    { "id": "ai-content", "name": "AI Content", "level": 80 },
+    { "id": "blender", "name": "Blender", "level": 90 },
+    { "id": "substance", "name": "Substance Painter", "level": 85 },
+    { "id": "git", "name": "Git", "level": 75 },
+    { "id": "photoshop", "name": "Photoshop", "level": 90 },
+    { "id": "premiere", "name": "Premiere", "level": 70 },
+    { "id": "lightroom", "name": "Lightroom", "level": 80 }
+  ],
+  "contact": {
+    "email": "brydlstepan@gmail.com"
+  },
+  "social": {
+    "github": "https://github.com/brydlstepan",
+    "linkedin": "https://www.linkedin.com/in/brydlstepan",
+    "instagram": "https://www.instagram.com/brydlstepan",
+    "photography": "https://www.instagram.com/roving.shots",
+    "artstation": "https://www.artstation.com/brydlstepan",
+    "behance": "https://www.behance.net/brydlstepan"
+  }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Placeholder cover">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a28"/>
+      <stop offset="100%" stop-color="#0a0a12"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <g fill="none" stroke="#3a4a8a" stroke-width="1" opacity="0.5">
+    <path d="M0 380 L220 220 L380 300 L560 140 L800 260"/>
+    <path d="M120 500 L280 280 L420 360 L620 180 L800 320"/>
+  </g>
+  <text x="40" y="460" fill="#8890b0" font-family="system-ui,sans-serif" font-size="28" letter-spacing="4">NEON DISTRICT</text>
+</svg>

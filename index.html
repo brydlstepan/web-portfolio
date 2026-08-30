@@ -3,411 +3,324 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Portfolio under construction — something new is on the way.">
-  <title>BS / PFO · Coming Soon</title>
+  <meta name="description" content="Portfolio of brydlstepan — Unreal Engine Dev / 3D Generalist.">
+  <title>brydlstepan — Portfolio</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23fff'/%3E%3Crect x='10' y='10' width='12' height='12' rx='2' fill='%23000'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --bg: #000000;
-      --surface: #141414;
-      --text: #ffffff;
-      --muted: #888888;
-      --radius-lg: 20px;
-    }
-
-    html {
-      color-scheme: dark;
-    }
-
-    body {
-      min-height: 100dvh;
-      font-family: "Inter", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .brand {
-      padding: 1.25rem 1.5rem 0;
-      font-size: 0.875rem;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-      align-self: flex-start;
-    }
-
-    .brand__label {
-      color: var(--muted);
-      font-weight: 400;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.5rem;
-    }
-
-    @property --glow-r {
-      syntax: "<integer>";
-      initial-value: 55;
-      inherits: false;
-    }
-
-    @property --glow-g {
-      syntax: "<integer>";
-      initial-value: 75;
-      inherits: false;
-    }
-
-    @property --glow-b {
-      syntax: "<integer>";
-      initial-value: 215;
-      inherits: false;
-    }
-
-    @property --accent-r {
-      syntax: "<integer>";
-      initial-value: 55;
-      inherits: false;
-    }
-
-    @property --accent-g {
-      syntax: "<integer>";
-      initial-value: 75;
-      inherits: false;
-    }
-
-    @property --accent-b {
-      syntax: "<integer>";
-      initial-value: 215;
-      inherits: false;
-    }
-
-    @keyframes breathe-color {
-      0%, 100% {
-        --glow-r: 55;
-        --glow-g: 75;
-        --glow-b: 215;
-      }
-    }
-
-    @keyframes breathe-accent {
-      0%, 100% {
-        --accent-r: 55;
-        --accent-g: 75;
-        --accent-b: 215;
-      }
-      50% {
-        --accent-r: 40;
-        --accent-g: 155;
-        --accent-b: 168;
-      }
-    }
-
-    .hero-wrap {
-      --mx: 50%;
-      --my: 50%;
-      --angle: 135deg;
-      --intensity: 0.4;
-      --glow-strength: 0.65;
-      --cursor-glow-strength: 0.24;
-      position: relative;
-      width: min(520px, 100%);
-      animation:
-        breathe-color 12s ease-in-out infinite,
-        breathe-accent 9s ease-in-out infinite;
-    }
-
-    .hero-glow-halo {
-      position: absolute;
-      inset: -56px;
-      border-radius: calc(var(--radius-lg) + 28px);
-      background: radial-gradient(
-        480px circle at 50% 50%,
-        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.35),
-        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.1) 50%,
-        transparent 72%
-      );
-      filter: blur(40px);
-      opacity: calc(0.55 * var(--glow-strength));
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .hero-glow-ambient {
-      position: absolute;
-      inset: 0;
-      border-radius: var(--radius-lg);
-      background: radial-gradient(
-        420px circle at 50% 50%,
-        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.55),
-        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.22) 42%,
-        rgba(var(--glow-r), var(--glow-g), var(--glow-b), 0.06) 62%,
-        transparent 78%
-      );
-      filter: blur(36px);
-      opacity: calc(0.9 * var(--glow-strength));
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .hero-glow {
-      position: absolute;
-      inset: 0;
-      border-radius: var(--radius-lg);
-      background: radial-gradient(
-        300px circle at var(--mx) var(--my),
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.55 * var(--intensity))),
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.22 * var(--intensity))) 38%,
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.06 * var(--intensity))) 58%,
-        transparent 75%
-      );
-      filter: blur(28px);
-      opacity: calc((0.45 + var(--intensity) * 0.55) * var(--glow-strength) * var(--cursor-glow-strength));
-      pointer-events: none;
-      z-index: 0;
-      transition: opacity 0.4s ease;
-    }
-
-    .hero-wrap.is-active .hero-glow {
-      opacity: calc((0.65 + var(--intensity) * 0.35) * var(--glow-strength) * var(--cursor-glow-strength));
-    }
-
-    .hero {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      background: rgba(20, 20, 20, 0.38);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
-      border-radius: var(--radius-lg);
-      padding: 2.5rem 2rem;
-      animation: fadeUp 0.8s ease both;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(
-        var(--angle),
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc((0.35 + var(--intensity) * 0.45) * var(--glow-strength))),
-        rgba(255, 255, 255, calc(0.08 * var(--glow-strength))) 40%,
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc((0.2 + var(--intensity) * 0.2) * var(--glow-strength))) 70%,
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc((0.28 + var(--intensity) * 0.35) * var(--glow-strength)))
-      );
-      -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-      mask-composite: exclude;
-      pointer-events: none;
-      transition: background 0.15s ease;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: radial-gradient(
-        420px circle at var(--mx) var(--my),
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.18 * var(--intensity) * var(--glow-strength) * var(--cursor-glow-strength))),
-        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(0.05 * var(--intensity) * var(--glow-strength) * var(--cursor-glow-strength))) 50%,
-        transparent 65%
-      );
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.85;
-    }
-
-    .hero > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .hero__tag {
-      display: inline-block;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 1.25rem;
-    }
-
-    .hero__title {
-      font-size: clamp(1.75rem, 4vw, 2.25rem);
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.25rem;
-    }
-
-    .hero__text {
-      font-size: 0.9375rem;
-      line-height: 1.65;
-      color: var(--muted);
-    }
-
-    .copyright a {
-      color: inherit;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .copyright a:hover {
-      color: var(--text);
-    }
-
-    .copyright {
-      padding: 1.5rem;
-      text-align: center;
-      font-size: 0.6875rem;
-      font-weight: 500;
-      color: var(--muted);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-
-      .hero-wrap {
-        --intensity: 0.45;
-        animation: none;
-        --glow-r: 55;
-        --glow-g: 75;
-        --glow-b: 215;
-        --accent-r: 55;
-        --accent-g: 75;
-        --accent-b: 215;
-      }
-
-      .hero-glow-ambient {
-        opacity: calc(0.75 * var(--glow-strength));
-      }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,144,500;1,144,600;1,144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
 </head>
-<body>
-  <p class="brand">brydlstepan <span class="brand__label">— PORTFOLIO</span></p>
+<body data-page="home">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="index.html" data-bind="brand">brydlstepan <span class="brand__label">— PORTFOLIO</span></a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu">
+        <span></span>
+      </button>
+
+      <nav class="nav" id="site-nav" aria-label="Primary">
+        <a href="#work">Work</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a href="freebies.html">Freebies</a>
+        <div class="nav__icons">
+          <a class="icon-btn" data-social="github" href="#" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+          <a class="icon-btn" data-social="linkedin" href="#" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+          <a class="icon-btn" data-social="photography" href="https://www.instagram.com/roving.shots" target="_blank" rel="noopener noreferrer" aria-label="Photography">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4.5 8.2A2.7 2.7 0 0 1 7.2 5.5h2.05l.7-1.4A1.4 1.4 0 0 1 11.2 3.4h1.6a1.4 1.4 0 0 1 1.25.7l.7 1.4H16.8A2.7 2.7 0 0 1 19.5 8.2v8.3a2.7 2.7 0 0 1-2.7 2.7H7.2A2.7 2.7 0 0 1 4.5 16.5V8.2z"/><circle cx="12" cy="12.4" r="3.35"/></svg>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
   <main>
-    <div class="hero-wrap">
-      <div class="hero-glow-halo" aria-hidden="true"></div>
-      <div class="hero-glow-ambient" aria-hidden="true"></div>
-      <div class="hero-glow" aria-hidden="true"></div>
-      <section class="hero">
-        <span class="hero__tag">Under construction</span>
-        <h1 class="hero__title">Something new is on its way.</h1>
-        <p class="hero__text">
-          Working on this in my spare time — a resource so scarce, scientists
-          are still debating whether it actually exists. Do check back. No rush.
+    <section class="hero">
+      <svg class="hero-fibonacci" viewBox="-110 -110 220 220" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <!-- φ = 1.618034; R = 100; arc r = Rφ; inner = R/φ -->
+        <g class="hero-fibonacci__draw" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <g class="hero-fibonacci__phi">
+            <circle cx="0" cy="0" r="100"/>
+            <circle cx="0" cy="0" r="61.803"/>
+            <rect x="-100" y="-61.803" width="200" height="123.607"/>
+            <rect x="-61.803" y="-100" width="123.607" height="200"/>
+          </g>
+          <g class="hero-fibonacci__axes">
+            <line x1="0" y1="-100" x2="0" y2="100"/>
+            <line x1="-86.603" y1="-50" x2="86.603" y2="50"/>
+            <line x1="-86.603" y1="50" x2="86.603" y2="-50"/>
+          </g>
+          <g class="hero-fibonacci__petals">
+            <path d="M 0 -100 A 161.803 161.803 0 0 1 0 100"/>
+            <path d="M 0 -100 A 161.803 161.803 0 0 0 0 100"/>
+            <g transform="rotate(60)">
+              <path d="M 0 -100 A 161.803 161.803 0 0 1 0 100"/>
+              <path d="M 0 -100 A 161.803 161.803 0 0 0 0 100"/>
+            </g>
+            <g transform="rotate(-60)">
+              <path d="M 0 -100 A 161.803 161.803 0 0 1 0 100"/>
+              <path d="M 0 -100 A 161.803 161.803 0 0 0 0 100"/>
+            </g>
+          </g>
+        </g>
+        <!-- Hidden pair paths; ribbons are created in JS so several pairs can run at once -->
+        <g class="hero-fibonacci__pulses">
+          <g data-pulse-pair="together">
+            <line class="hero-fibonacci__pulse-seg" x1="-86.603" y1="-50" x2="86.603" y2="50"/>
+            <line class="hero-fibonacci__pulse-seg" x1="-86.603" y1="50" x2="86.603" y2="-50"/>
+          </g>
+          <g data-pulse-pair="flip">
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 100 100 0 0 1 0 100"/>
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 100 100 0 0 0 0 100"/>
+          </g>
+          <g data-pulse-pair="flip">
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -61.803 A 61.803 61.803 0 0 1 0 61.803"/>
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -61.803 A 61.803 61.803 0 0 0 0 61.803"/>
+          </g>
+          <g data-pulse-pair="flip">
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 161.803 161.803 0 0 1 0 100"/>
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 161.803 161.803 0 0 0 0 100"/>
+          </g>
+          <g transform="rotate(60)" data-pulse-pair="flip">
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 161.803 161.803 0 0 1 0 100"/>
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 161.803 161.803 0 0 0 0 100"/>
+          </g>
+          <g transform="rotate(-60)" data-pulse-pair="flip">
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 161.803 161.803 0 0 1 0 100"/>
+            <path class="hero-fibonacci__pulse-seg" d="M 0 -100 A 161.803 161.803 0 0 0 0 100"/>
+          </g>
+          <g data-pulse-pair="flip">
+            <line class="hero-fibonacci__pulse-seg" x1="-61.803" y1="-100" x2="-61.803" y2="100"/>
+            <line class="hero-fibonacci__pulse-seg" x1="61.803" y1="-100" x2="61.803" y2="100"/>
+          </g>
+          <g data-pulse-pair="flip">
+            <line class="hero-fibonacci__pulse-seg" x1="-100" y1="-61.803" x2="-100" y2="61.803"/>
+            <line class="hero-fibonacci__pulse-seg" x1="100" y1="-61.803" x2="100" y2="61.803"/>
+          </g>
+        </g>
+      </svg>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <svg class="hero-wordmark" id="hero-wordmark" aria-hidden="true">
+        <defs>
+          <linearGradient id="hero-reveal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1a2468"/>
+            <stop offset="40%" stop-color="#2a3a9a"/>
+            <stop offset="75%" stop-color="#3d52c4"/>
+            <stop offset="100%" stop-color="#4a62d8"/>
+          </linearGradient>
+          <filter id="hero-wind" x="-8%" y="-20%" width="116%" height="140%">
+            <feTurbulence
+              type="turbulence"
+              baseFrequency="0.018 0.006"
+              numOctaves="2"
+              seed="4"
+              result="gust"
+            >
+              <animate
+                attributeName="baseFrequency"
+                values="0.014 0.005;0.022 0.008;0.016 0.006;0.014 0.005"
+                dur="9s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="seed"
+                values="4;9;4"
+                dur="14s"
+                repeatCount="indefinite"
+              />
+            </feTurbulence>
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="gust"
+              scale="5"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+          <filter id="hero-oil" x="-50%" y="-50%" width="200%" height="200%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="7" result="noise">
+              <animate attributeName="baseFrequency" values="0.015;0.028;0.015" dur="18.5s" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="42" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+            <feGaussianBlur in="warp" stdDeviation="1.1"/>
+          </filter>
+          <filter id="hero-goo" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur"/>
+            <feColorMatrix in="blur" mode="matrix" values="
+              1 0 0 0 0
+              0 1 0 0 0
+              0 0 1 0 0
+              0 0 0 24 -11" result="goo"/>
+          </filter>
+          <mask id="hero-liquid-mask" maskUnits="userSpaceOnUse">
+            <rect class="hero-mask-bg" x="0" y="0" width="100%" height="100%" fill="black"/>
+            <g filter="url(#hero-goo)">
+              <g filter="url(#hero-oil)" class="hero-oil-mass">
+                <circle class="hero-blob" data-rest="0" cx="0" cy="0" r="0" fill="white"/>
+                <circle class="hero-blob" data-rest="1" cx="0" cy="0" r="0" fill="white"/>
+                <circle class="hero-blob" data-rest="2" cx="0" cy="0" r="0" fill="white"/>
+                <circle class="hero-blob" data-rest="3" cx="0" cy="0" r="0" fill="white"/>
+                <circle class="hero-blob" data-rest="4" cx="0" cy="0" r="0" fill="white"/>
+                <circle class="hero-blob" data-rest="5" cx="0" cy="0" r="0" fill="white"/>
+                <circle class="hero-blob" data-rest="6" cx="0" cy="0" r="0" fill="white"/>
+                <g class="hero-oil-holes">
+                  <g class="hero-hole" data-rest="0">
+                    <ellipse cx="0" cy="0" rx="26" ry="22" fill="black" transform="rotate(-10)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="1">
+                    <ellipse cx="0" cy="0" rx="30" ry="26" fill="black" transform="rotate(8)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="2">
+                    <ellipse cx="0" cy="0" rx="22" ry="25" fill="black" transform="rotate(16)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="3">
+                    <ellipse cx="0" cy="0" rx="25" ry="21" fill="black" transform="rotate(-6)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="4">
+                    <ellipse cx="0" cy="0" rx="18" ry="20" fill="black" transform="rotate(12)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="5">
+                    <ellipse cx="0" cy="0" rx="14" ry="12" fill="black" transform="rotate(-18)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="6">
+                    <ellipse cx="0" cy="0" rx="16" ry="19" fill="black" transform="rotate(28)"/>
+                  </g>
+                  <g class="hero-hole" data-rest="7">
+                    <ellipse cx="0" cy="0" rx="20" ry="15" fill="black" transform="rotate(-32)"/>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </mask>
+        </defs>
+        <text class="hero-wordmark__base" text-anchor="middle" dominant-baseline="middle">PORTFOLIO</text>
+        <text class="hero-wordmark__reveal" text-anchor="middle" dominant-baseline="middle" mask="url(#hero-liquid-mask)" fill="url(#hero-reveal-grad)" filter="url(#hero-wind)">PORTFOLIO</text>
+      </svg>
+      <a class="hero-scroll" href="#work" aria-label="Scroll to projects">
+        <span class="hero-scroll__mouse" aria-hidden="true">
+          <span class="hero-scroll__wheel"></span>
+        </span>
+        <span class="hero-scroll__label">Scroll</span>
+      </a>
+    </section>
+
+    <section class="section" id="work">
+      <div class="wrap">
+        <div class="section__head">
+          <h2>Projects</h2>
+          <p class="section__lede">Assignments that took a bit more than just a few hours.</p>
+        </div>
+
+        <div class="filters" id="filters" role="toolbar" aria-label="Filter projects by tag"></div>
+        <div class="project-grid" id="project-grid"></div>
+        <p class="work-empty" id="work-empty">Nothing in this tag yet — try another, or wait for spare time to invent itself.</p>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="wrap">
+        <div class="section__head">
+          <h2>Hi!</h2>
+        </div>
+        <div class="about-intro">
+          <p class="prose" data-bind="about"></p>
+          <a class="about-cv" data-bind="cv" href="assets/cv/Stepan-Brydl-CV.pdf" download>
+            Download CV
+          </a>
+        </div>
+        <div class="about-layout">
+          <div class="about-portrait">
+            <img
+              data-bind="portrait"
+              src="assets/about/portrait.png"
+              alt="Portrait of brydlstepan"
+              width="480"
+              height="480"
+            />
+          </div>
+          <div class="skills">
+            <h3 class="skills__title">Skills</h3>
+            <div class="skills-list" id="skills-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="wrap">
+        <div class="section__head">
+          <span class="eyebrow">Contact</span>
+          <h2>Say hello</h2>
+        </div>
+        <p class="prose" style="margin: 0 auto 1.5rem; text-align: center;">
+          Projects, collaborations, or just a sharp observation about Unreal lighting — email works best.
         </p>
-      </section>
-    </div>
+        <div class="contact-list" style="align-items: center;">
+          <a data-bind="email" href="mailto:brydlstepan@gmail.com">brydlstepan@gmail.com</a>
+          <a data-social="linkedin" href="#" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <p class="copyright">&copy; <span id="year"></span> <a href="mailto:brydlstepan@gmail.com">brydlstepan@gmail.com</a></p>
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <a class="site-footer__email" data-bind="email" href="mailto:brydlstepan@gmail.com">brydlstepan@gmail.com</a>
+      <div class="site-footer__social">
+        <a class="footer-icon" data-social="instagram" href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a class="footer-icon" data-social="linkedin" href="#" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.94 8.5H3.75V20h3.19V8.5zM5.34 7.05a1.85 1.85 0 1 0 0-3.7 1.85 1.85 0 0 0 0 3.7zM20.25 20h-3.18v-5.6c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94V20H9.9V8.5h3.05v1.57h.04c.43-.8 1.47-1.65 3.02-1.65 3.23 0 3.83 2.13 3.83 4.9V20z"/></svg>
+        </a>
+        <a class="footer-icon" data-social="artstation" href="#" target="_blank" rel="noopener noreferrer" aria-label="ArtStation">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M0 17.72h3.9l6.1-10.56L14.24 14H9.66l-.9 1.56h8.58L22.1 17.72H0zm14.72-3.13 2.46 4.25h4.32L14.72 6.28l-2.47 4.28 2.47 4.03z"/></svg>
+        </a>
+        <a class="footer-icon" data-social="behance" href="#" target="_blank" rel="noopener noreferrer" aria-label="Behance">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.86 11.1c.74-.3 1.18-.9 1.18-1.76 0-1.45-1.1-2.34-2.95-2.34H2.5v9.9h4.8c1.95 0 3.3-1 3.3-2.7 0-1.1-.6-1.95-1.74-2.3zM4.7 8.3h1.9c.8 0 1.25.4 1.25 1.05S7.4 10.4 6.5 10.4H4.7V8.3zm2.05 6.5H4.7v-2.5h2.1c.95 0 1.45.45 1.45 1.25s-.55 1.25-1.5 1.25zM15.8 9.45c-2.5 0-4.15 1.75-4.15 4.2 0 2.5 1.6 4.15 4.3 4.15 1.7 0 2.95-.65 3.65-1.85l-1.5-.9c-.45.7-1.2 1.1-2.1 1.1-1.35 0-2.25-.85-2.4-2.15h6.25c.05-.3.1-.7.1-1.05 0-2.4-1.45-4.5-4.15-4.5zm-2.15 3.35c.2-1.2.95-1.95 2.1-1.95 1.2 0 1.9.75 2 1.95h-4.1zM21.5 6.8h-5.2v1.5h5.2V6.8z"/></svg>
+        </a>
+      </div>
+      <span class="site-footer__copy">&copy; <span data-bind="year"></span></span>
+    </div>
+  </footer>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+  <div class="modal" id="project-modal" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+      <button class="modal__close" type="button" aria-label="Close project">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="modal__stage" id="modal-stage"></div>
+      <div class="modal__thumbs" id="modal-thumbs"></div>
+      <h2 class="modal__title" id="modal-title"></h2>
+      <div class="modal__tags" id="modal-tags"></div>
+      <div class="modal__meta" id="modal-meta"></div>
+      <p class="modal__desc" id="modal-desc"></p>
+      <div class="modal__links" id="modal-links"></div>
+    </div>
+  </div>
 
-    (function () {
-      const wrap = document.querySelector(".hero-wrap");
-      if (!wrap || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-      let targetX = 0.5;
-      let targetY = 0.5;
-      let targetIntensity = 0.4;
-      let currentX = 0.5;
-      let currentY = 0.5;
-      let currentIntensity = 0.4;
-      let angle = 135;
-      let rafId = null;
-
-      function setVars(x, y, intensity, deg) {
-        wrap.style.setProperty("--mx", `${x * 100}%`);
-        wrap.style.setProperty("--my", `${y * 100}%`);
-        wrap.style.setProperty("--intensity", intensity.toFixed(3));
-        wrap.style.setProperty("--angle", `${deg}deg`);
-      }
-
-      function tick() {
-        currentX += (targetX - currentX) * 0.12;
-        currentY += (targetY - currentY) * 0.12;
-        currentIntensity += (targetIntensity - currentIntensity) * 0.1;
-        setVars(currentX, currentY, currentIntensity, angle);
-
-        if (
-          Math.abs(targetX - currentX) > 0.001 ||
-          Math.abs(targetY - currentY) > 0.001 ||
-          Math.abs(targetIntensity - currentIntensity) > 0.001
-        ) {
-          rafId = requestAnimationFrame(tick);
-        } else {
-          rafId = null;
-        }
-      }
-
-      function scheduleTick() {
-        if (!rafId) rafId = requestAnimationFrame(tick);
-      }
-
-      function updateFromPointer(clientX, clientY) {
-        const rect = wrap.getBoundingClientRect();
-        const x = (clientX - rect.left) / rect.width;
-        const y = (clientY - rect.top) / rect.height;
-        const cx = 0.5;
-        const cy = 0.5;
-        const dx = x - cx;
-        const dy = y - cy;
-        const dist = Math.hypot(dx, dy);
-
-        targetX = Math.min(Math.max(x, -0.15), 1.15);
-        targetY = Math.min(Math.max(y, -0.15), 1.15);
-        targetIntensity = Math.min(dist * 1.4 + 0.35, 1);
-        angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-        scheduleTick();
-      }
-
-      document.addEventListener("mousemove", (e) => {
-        wrap.classList.add("is-active");
-        updateFromPointer(e.clientX, e.clientY);
-      });
-
-      document.addEventListener("mouseleave", () => {
-        wrap.classList.remove("is-active");
-        targetIntensity = 0.4;
-        scheduleTick();
-      });
-    })();
-  </script>
+  <script src="js/site.js"></script>
+  <button class="theme-switch" type="button" aria-label="Switch to light theme">
+    <svg class="theme-switch__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 3v1.5M12 19.5V21M4.93 4.93l1.06 1.06M18.01 18.01l1.06 1.06M3 12h1.5M19.5 12H21M4.93 19.07l1.06-1.06M18.01 5.99l1.06-1.06"/>
+    </svg>
+    <svg class="theme-switch__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5z"/>
+    </svg>
+  </button>
 </body>
 </html>

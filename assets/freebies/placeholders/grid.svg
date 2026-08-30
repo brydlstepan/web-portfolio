@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Freebie placeholder">
+  <rect width="800" height="500" fill="#101010"/>
+  <g stroke="#444" stroke-width="1" fill="none">
+    <path d="M80 100 H720 M80 180 H720 M80 260 H720 M80 340 H720"/>
+    <path d="M160 60 V400 M320 60 V400 M480 60 V400 M640 60 V400"/>
+  </g>
+  <text x="40" y="460" fill="#888" font-family="system-ui,sans-serif" font-size="28" letter-spacing="4">GRID KIT</text>
+</svg>

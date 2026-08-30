@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Placeholder cover">
+  <rect width="800" height="500" fill="#111"/>
+  <rect x="100" y="100" width="600" height="260" rx="16" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+  <rect x="140" y="140" width="200" height="16" fill="#444"/>
+  <rect x="140" y="180" width="480" height="10" fill="#2a2a2a"/>
+  <rect x="140" y="210" width="400" height="10" fill="#2a2a2a"/>
+  <rect x="140" y="280" width="120" height="36" rx="18" fill="#2a3a5a"/>
+  <text x="40" y="460" fill="#888" font-family="system-ui,sans-serif" font-size="28" letter-spacing="4">PORTFOLIO</text>
+</svg>

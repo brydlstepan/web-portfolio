@@ -1,0 +1,102 @@
+[
+  {
+    "id": "neon-district",
+    "title": "Neon District",
+    "tags": ["unreal", "3d", "ar-vr", "large"],
+    "summary": "A dense realtime city block built for headset walkthroughs.",
+    "description": "A modular night-city environment focused on lighting, density, and performance on standalone VR. Packaged as a walkthrough experience with baked GI and a lean prop kit. Placeholder project until the real case study lands.",
+    "year": 2025,
+    "role": "Environment, lighting, optimization",
+    "tools": ["Unreal Engine", "Blender", "Substance"],
+    "cover": "assets/projects/placeholders/neon.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/neon.svg",
+        "alt": "Street overview"
+      },
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "Detail pass"
+      }
+    ],
+    "links": [],
+    "featured": true,
+    "order": 1,
+    "published": true
+  },
+  {
+    "id": "atelier-viz",
+    "title": "Atelier Visualization",
+    "tags": ["visualization", "unreal", "3d", "medium"],
+    "summary": "Architectural walkthrough for a renovation proposal.",
+    "description": "Realtime presentation of a residential interior — materials, soft lighting, and a guided camera path for client review. Built to iterate fast between design meetings.",
+    "year": 2025,
+    "role": "Visualization, scene assembly",
+    "tools": ["Unreal Engine", "Datasmith"],
+    "cover": "assets/projects/placeholders/viz.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "Living space"
+      },
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/neon.svg",
+        "alt": "Evening mood"
+      }
+    ],
+    "links": [],
+    "featured": false,
+    "order": 2,
+    "published": true
+  },
+  {
+    "id": "glyph-set",
+    "title": "Glyph Set",
+    "tags": ["graphics", "medium"],
+    "summary": "A compact icon and mark system for a product launch.",
+    "description": "Grid-based glyphs with a small family of variants. Designed to work at UI sizes and as larger print marks without losing structure.",
+    "year": 2024,
+    "role": "Graphic design",
+    "tools": ["Figma", "Illustrator"],
+    "cover": "assets/projects/placeholders/graphics.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/graphics.svg",
+        "alt": "Glyph sheet"
+      }
+    ],
+    "links": [],
+    "featured": false,
+    "order": 3,
+    "published": true
+  },
+  {
+    "id": "portfolio-shell",
+    "title": "This Portfolio",
+    "tags": ["web", "medium"],
+    "summary": "The site you're looking at — static, tagged, and still under construction.",
+    "description": "A black-and-white one-pager with frosted glass, tag filters, and a local configurator in the works. Built to stay free to host and easy to update without a CMS.",
+    "year": 2026,
+    "role": "Design, front-end",
+    "tools": ["HTML", "CSS", "JavaScript"],
+    "cover": "assets/projects/placeholders/web.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/web.svg",
+        "alt": "Site shell"
+      }
+    ],
+    "links": [
+      { "label": "GitHub", "url": "https://github.com/brydlstepan/web-portfolio" }
+    ],
+    "featured": false,
+    "order": 4,
+    "published": true
+  }
+]
