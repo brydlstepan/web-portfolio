@@ -6,34 +6,47 @@
 
 :root {
   --bg: #000000;
-  --surface: #141414;
-  --surface-glass: rgba(20, 20, 20, 0.55);
-  --text: #ffffff;
-  --muted: #888888;
-  --border: rgba(255, 255, 255, 0.1);
-  --header-bg: rgba(10, 10, 10, 0.78);
-  --header-border: rgba(255, 255, 255, 0.1);
-  --header-shadow: 0 4px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --nav-bg: rgba(10, 10, 10, 0.96);
-  --card-bg: rgba(18, 18, 18, 0.42);
-  --card-media: rgba(8, 8, 8, 0.65);
-  --hover-fill: rgba(255, 255, 255, 0.06);
-  --footer-fg: #555555;
-  --footer-icon: #7a7a7a;
-  --grid-dot: rgba(255, 255, 255, 0.07);
-  --wordmark-stroke: rgba(255, 255, 255, 0.16);
-  --modal-scrim: rgba(0, 0, 0, 0.72);
+  --surface: #121214;
+  --surface-glass: rgba(14, 14, 16, 0.58);
+  --text: #f2f2f3;
+  --muted: #8a8a90;
+  --border: rgba(255, 255, 255, 0.09);
+  --header-bg: rgba(10, 10, 12, 0.82);
+  --header-border: rgba(255, 255, 255, 0.09);
+  --header-shadow: 0 4px 28px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --nav-bg: rgba(10, 10, 12, 0.96);
+  --card-bg: rgba(18, 18, 20, 0.48);
+  --card-media: rgba(8, 8, 10, 0.7);
+  --hover-fill: rgba(255, 255, 255, 0.055);
+  --footer-fg: #5c5c62;
+  --footer-icon: #7a7a80;
+  --grid-dot: rgba(180, 200, 255, 0.07);
+  --wordmark-stroke: rgba(200, 210, 230, 0.18);
+  --modal-scrim: rgba(0, 0, 0, 0.78);
   --radius: 20px;
   --radius-sm: 12px;
   --max: 1280px;
-  --glow-r: 2;
-  --glow-g: 34;
-  --glow-b: 159;
-  --accent-r: 2;
-  --accent-g: 34;
-  --accent-b: 159;
-  --accent-2: #E0A03A;
-  --accent-2-rgb: 224, 160, 58;
+  /* Cavern: cobalt primary + amber hover/outline */
+  --glow-r: 110;
+  --glow-g: 182;
+  --glow-b: 255;
+  --accent-r: 14;
+  --accent-g: 42;
+  --accent-b: 150;
+  --accent: #0e2a96;
+  --accent-mid: #1a3cbe;
+  --accent-bright: #3558e6;
+  --accent-deep: #091650;
+  --accent-2: #e8913a;
+  --accent-2-rgb: 232, 145, 58;
+  --accent-grad: linear-gradient(
+    to bottom left,
+    var(--accent-bright) 0%,
+    var(--accent-mid) 28%,
+    var(--accent) 62%,
+    var(--accent-deep) 100%
+  );
+  --accent-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.28 0 0 0 0 0.65 0 0 0 0.45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --header-h: 4.5rem;
   --header-stack: calc(0.85rem + 3.25rem + 1.3rem);
 }
@@ -58,14 +71,25 @@ html[data-theme="light"] {
   --grid-dot: rgba(20, 20, 28, 0.1);
   --wordmark-stroke: rgba(20, 20, 28, 0.18);
   --modal-scrim: rgba(236, 238, 242, 0.72);
-  --glow-r: 2;
-  --glow-g: 34;
-  --glow-b: 159;
-  --accent-r: 2;
-  --accent-g: 34;
-  --accent-b: 159;
-  --accent-2: #C48A2E;
-  --accent-2-rgb: 196, 138, 46;
+  --glow-r: 14;
+  --glow-g: 63;
+  --glow-b: 156;
+  --accent-r: 14;
+  --accent-g: 42;
+  --accent-b: 150;
+  --accent: #0e2a96;
+  --accent-mid: #1a3cbe;
+  --accent-bright: #2f4fd4;
+  --accent-deep: #091650;
+  --accent-2: #c8782d;
+  --accent-2-rgb: 200, 120, 45;
+  --accent-grad: linear-gradient(
+    to bottom left,
+    var(--accent-bright) 0%,
+    var(--accent-mid) 28%,
+    var(--accent) 62%,
+    var(--accent-deep) 100%
+  );
 }
 
 html {
@@ -273,21 +297,75 @@ button {
 }
 
 .section {
+  position: relative;
+  isolation: isolate;
   padding: 5.5rem 0;
   border-bottom: 1px solid var(--border);
+  overflow: clip;
 }
 
 .section:last-of-type {
   border-bottom: none;
 }
 
+.section > .wrap {
+  position: relative;
+  z-index: 1;
+}
+
 .section__head {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 0.95rem;
   margin-bottom: 5.5rem;
+}
+
+.section__head > :not(.section-head-grid) {
+  position: relative;
+  z-index: 1;
+}
+
+.section-head-grid {
+  --gx: 50%;
+  --gy: 50%;
+  --grid-glow: 0;
+  position: absolute;
+  inset: -2.75rem -3.5rem;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: center center;
+  mask-image: radial-gradient(ellipse 88% 78% at 50% 50%, #000 18%, transparent 76%);
+  -webkit-mask-image: radial-gradient(ellipse 88% 78% at 50% 50%, #000 18%, transparent 76%);
+}
+
+.section-head-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(var(--accent-2-rgb), 0.95) 1.15px,
+    transparent 1.15px
+  );
+  background-size: 26px 26px;
+  background-position: center center;
+  opacity: var(--grid-glow);
+  mask-image: radial-gradient(
+    circle clamp(72px, 14vw, 130px) at var(--gx) var(--gy),
+    #000 0%,
+    rgba(0, 0, 0, 0.55) 32%,
+    transparent 72%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle clamp(72px, 14vw, 130px) at var(--gx) var(--gy),
+    #000 0%,
+    rgba(0, 0, 0, 0.55) 32%,
+    transparent 72%
+  );
 }
 
 .eyebrow {
@@ -367,8 +445,8 @@ button {
 }
 
 .hero-fibonacci__draw {
-  opacity: 0.28;
-  stroke: rgba(220, 226, 255, 0.42);
+  opacity: 0.26;
+  stroke: rgba(160, 185, 230, 0.34);
   stroke-width: 0.12px;
   vector-effect: non-scaling-stroke;
 }
@@ -392,18 +470,18 @@ button {
 }
 
 .hero-fibonacci__pulse-ribbon {
-  fill: #02229F;
+  fill: url(#fib-pulse-grad);
   stroke: none;
   opacity: 0;
 }
 
 html[data-theme="light"] .hero-fibonacci__pulse-ribbon {
-  fill: #02229F;
+  fill: url(#fib-pulse-grad);
 }
 
 html[data-theme="light"] .hero-fibonacci__draw {
-  opacity: 0.32;
-  stroke: rgba(32, 40, 72, 0.5);
+  opacity: 0.3;
+  stroke: rgba(32, 50, 90, 0.4);
 }
 
 .hero-grid {
@@ -425,7 +503,10 @@ html[data-theme="light"] .hero-fibonacci__draw {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(210, 220, 255, 0.95) 1.15px, transparent 1.15px);
+  background-image: radial-gradient(
+    rgba(var(--accent-2-rgb), 0.95) 1.15px,
+    transparent 1.15px
+  );
   background-size: 26px 26px;
   background-position: center center;
   opacity: var(--grid-glow);
@@ -487,7 +568,6 @@ html[data-theme="light"] .hero-fibonacci__draw {
   letter-spacing: 0.02em;
   opacity: 0;
   transition: opacity 0.3s ease;
-  filter: drop-shadow(0 0 28px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.5));
 }
 
 .hero-wordmark.is-active .hero-wordmark__reveal {
@@ -548,47 +628,48 @@ html[data-theme="light"] .hero-fibonacci__draw {
 
 @property --glow-r {
   syntax: "<integer>";
-  initial-value: 2;
+  initial-value: 110;
   inherits: false;
 }
 
 @property --glow-g {
   syntax: "<integer>";
-  initial-value: 34;
+  initial-value: 182;
   inherits: false;
 }
 
 @property --glow-b {
   syntax: "<integer>";
-  initial-value: 159;
+  initial-value: 255;
   inherits: false;
 }
 
 @property --accent-r {
   syntax: "<integer>";
-  initial-value: 2;
+  initial-value: 14;
   inherits: false;
 }
 
 @property --accent-g {
   syntax: "<integer>";
-  initial-value: 34;
+  initial-value: 63;
   inherits: false;
 }
 
 @property --accent-b {
   syntax: "<integer>";
-  initial-value: 159;
+  initial-value: 156;
   inherits: false;
 }
 
 @keyframes breathe-color {
-  0%, 100% { --glow-r: 2; --glow-g: 34; --glow-b: 159; }
+  0%, 100% { --glow-r: 110; --glow-g: 182; --glow-b: 255; }
+  50% { --glow-r: 74; --glow-g: 138; --glow-b: 255; }
 }
 
 @keyframes breathe-accent {
-  0%, 100% { --accent-r: 2; --accent-g: 34; --accent-b: 159; }
-  50% { --accent-r: 20; --accent-g: 60; --accent-b: 185; }
+  0%, 100% { --accent-r: 14; --accent-g: 42; --accent-b: 150; }
+  50% { --accent-r: 26; --accent-g: 60; --accent-b: 190; }
 }
 
 .btn {
@@ -954,9 +1035,11 @@ html[data-theme="light"] .skill__track {
   height: 100%;
   width: 0;
   border-radius: inherit;
-  /* Match site-slime-grad stops so goo merge doesn't two-tone. */
-  background: linear-gradient(90deg, #02229f 0%, #1a45c4 55%, #3d68f0 100%);
-  box-shadow: 0 0 8px rgba(2, 34, 159, 0.28);
+  background-image: var(--accent-noise), var(--accent-grad);
+  background-blend-mode: soft-light, normal;
+  background-size: 140px 140px, auto;
+  box-shadow:
+    0 0 10px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.35);
   transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 

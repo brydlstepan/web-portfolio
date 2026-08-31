@@ -88,20 +88,32 @@
     });
   }
 
-  function setupHeroFibonacciStrings() {
-    const svg = $(".hero-fibonacci");
-    const hero = $(".hero");
-    if (!svg || !hero) return;
+  function createStringPluck(svg, host, options = {}) {
+    if (!svg || !host) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const layer = $(".hero-fibonacci__pulses", svg);
-    const segs = $$(".hero-fibonacci__string", svg);
+    const {
+      pulseSelector = ".hero-fibonacci__pulses",
+      stringSelector = ".hero-fibonacci__string",
+      pulseClass = "hero-fibonacci__pulse-ribbon",
+      pulseFill = "",
+      skipTransformParents = ["hero-fibonacci__strings"],
+      halfWidth = 0.08,
+      packetHalf = 28,
+      maxTravel = 72,
+      hitPx = 22,
+      slidePx = 11,
+      sampleStep = 3.5,
+      fadePeak = 0.375,
+      wobblePeak = 0.55,
+    } = options;
+
+    const layer = $(pulseSelector, svg);
+    const segs = $$(stringSelector, svg);
     if (!layer || !segs.length) return;
 
     const svgNS = "http://www.w3.org/2000/svg";
     const duration = 920;
-    const packetHalf = 28;
-    const halfWidth = 0.08;
     const samples = 18;
     const maxJobs = 8;
     const pool = [];
@@ -116,7 +128,8 @@
         let slot = pool.find((item) => !item.inUse);
         if (!slot) {
           const el = document.createElementNS(svgNS, "path");
-          el.setAttribute("class", "hero-fibonacci__pulse-ribbon");
+          el.setAttribute("class", pulseClass);
+          if (pulseFill) el.setAttribute("fill", pulseFill);
           layer.appendChild(el);
           slot = { el, inUse: false };
           pool.push(slot);
@@ -174,7 +187,7 @@
     const sampleString = (seg) => {
       const len = pathLen(seg);
       const closed = seg.getAttribute("data-closed") === "1";
-      const n = Math.max(28, Math.ceil(len / 3.5));
+      const n = Math.max(28, Math.ceil(len / sampleStep));
       const pts = [];
       for (let i = 0; i <= n; i += 1) {
         const d = (i / n) * len;
@@ -227,9 +240,8 @@
       }
 
       const parent = seg.parentNode;
-      const xf = parent.classList.contains("hero-fibonacci__strings")
-        ? ""
-        : parent.getAttribute("transform") || "";
+      const skip = skipTransformParents.some((cls) => parent.classList.contains(cls));
+      const xf = skip ? "" : parent.getAttribute("transform") || "";
       ribbon.setAttribute("transform", xf);
       ribbon.setAttribute(
         "d",
@@ -253,8 +265,8 @@
         const job = jobs[i];
         const t = Math.min(1, (now - job.start) / duration);
         const ease = 1 - (1 - t) ** 3;
-        const fade = (1 - t) ** 2 * 0.375;
-        const wobble = (1 - t) ** 2 * 0.55 * Math.sin(t * Math.PI * 2.2);
+        const fade = (1 - t) ** 2 * fadePeak;
+        const wobble = (1 - t) ** 2 * wobblePeak * Math.sin(t * Math.PI * 2.2);
         const travel = ease * job.travel;
         placePacket(job.slots[0].el, job.string, job.origin + travel, fade, wobble);
         placePacket(job.slots[1].el, job.string, job.origin - travel, fade, -wobble);
@@ -276,7 +288,7 @@
       jobs.push({
         string,
         origin,
-        travel: Math.min(string.len * 0.48, 72),
+        travel: Math.min(string.len * 0.48, maxTravel),
         slots,
         start: performance.now(),
       });
@@ -305,7 +317,7 @@
       if (!p) return;
       const ctm = svg.getScreenCTM();
       const unit = ctm ? Math.hypot(ctm.a, ctm.b) : 1;
-      const thresh = 22 / unit;
+      const thresh = hitPx / unit;
       const hit = nearest(p.x, p.y, thresh * thresh);
       const now = performance.now();
       if (!hit) {
@@ -313,7 +325,7 @@
         return;
       }
       const isNew = !lastHit || lastHit.seg !== hit.string.seg;
-      const slid = lastHit && Math.abs(hit.d - lastHit.d) > 11;
+      const slid = lastHit && Math.abs(hit.d - lastHit.d) > slidePx;
       const cooled = !lastHit || now - lastHit.time > 140;
       if (isNew || (slid && cooled)) {
         pluck(hit.string, hit.d);
@@ -324,13 +336,69 @@
     };
 
     rebuild();
-    hero.addEventListener("pointermove", onMove);
-    hero.addEventListener("pointerleave", () => {
+    host.addEventListener("pointermove", onMove);
+    host.addEventListener("pointerleave", () => {
       lastHit = null;
     });
     window.addEventListener("resize", rebuild);
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) clearAll();
+    });
+  }
+
+  function setupHeroFibonacciStrings() {
+    createStringPluck($(".hero-fibonacci"), $(".hero"));
+  }
+
+  function setupSectionHeadGrids() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    $$(".section__head").forEach((head) => {
+      let grid = $(".section-head-grid", head);
+      if (!grid) {
+        grid = document.createElement("div");
+        grid.className = "section-head-grid";
+        grid.setAttribute("aria-hidden", "true");
+        head.prepend(grid);
+      }
+
+      let smoothX = 0;
+      let smoothY = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+      let pointerInside = false;
+      let presence = 0;
+      let raf = 0;
+
+      const tick = () => {
+        smoothX += (pointerX - smoothX) * 0.12;
+        smoothY += (pointerY - smoothY) * 0.12;
+        presence += ((pointerInside ? 0.5 : 0) - presence) * (pointerInside ? 0.08 : 0.06);
+
+        grid.style.setProperty("--gx", `${smoothX}px`);
+        grid.style.setProperty("--gy", `${smoothY}px`);
+        grid.style.setProperty("--grid-glow", String(pointerInside ? presence * 0.45 : 0));
+
+        if (pointerInside || presence > 0.01) raf = window.requestAnimationFrame(tick);
+        else raf = 0;
+      };
+
+      const onMove = (e) => {
+        const rect = head.getBoundingClientRect();
+        pointerX = e.clientX - rect.left;
+        pointerY = e.clientY - rect.top;
+        pointerInside = true;
+        if (!raf) raf = window.requestAnimationFrame(tick);
+      };
+
+      const onLeave = () => {
+        pointerInside = false;
+        if (!raf) raf = window.requestAnimationFrame(tick);
+      };
+
+      head.addEventListener("pointerenter", onMove);
+      head.addEventListener("pointermove", onMove);
+      head.addEventListener("pointerleave", onLeave);
     });
   }
 
@@ -381,7 +449,7 @@
         el.setAttribute("y", String(cy));
         el.setAttribute(
           "transform",
-          `translate(0 ${dy}) translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`
+          `translate(0 ${dy.toFixed(2)}) translate(${cx} ${cy}) scale(${scale.toFixed(4)}) translate(${-cx} ${-cy})`
         );
       };
       place(baseText, parallaxBase, parallaxScaleBase);
@@ -425,12 +493,21 @@
       // Both drift up with scroll; oil/accent leads, outline trails behind.
       const scrolled = Math.max(0, -hero.getBoundingClientRect().top);
       const progress = Math.min(1, scrolled / Math.max(1, size.h));
-      parallaxBase = scrolled * -0.12;
-      parallaxOil = scrolled * -0.28;
-      parallaxScaleBase = 1 - progress * 0.1;
-      parallaxScaleOil = 1 - progress * 0.16;
+      const targetBase = scrolled * -0.12;
+      const targetOil = scrolled * -0.28;
+      const targetScaleBase = 1 - progress * 0.1;
+      const targetScaleOil = 1 - progress * 0.16;
+      // Ease parallax so outline/oil don't hitch on scroll sampling.
+      parallaxBase += (targetBase - parallaxBase) * 0.18;
+      parallaxOil += (targetOil - parallaxOil) * 0.18;
+      parallaxScaleBase += (targetScaleBase - parallaxScaleBase) * 0.18;
+      parallaxScaleOil += (targetScaleOil - parallaxScaleOil) * 0.18;
       if (fib) {
-        fib.style.transform = `scale(${1 + progress * 0.14})`;
+        const fibScale = 1 + progress * 0.14;
+        const current = Number.parseFloat(fib.dataset.parallaxScale || "1");
+        const next = current + (fibScale - current) * 0.18;
+        fib.dataset.parallaxScale = String(next);
+        fib.style.transform = `scale(${next.toFixed(4)})`;
       }
     };
 
@@ -1073,10 +1150,11 @@
     svg.setAttribute("aria-hidden", "true");
     svg.innerHTML = `
       <defs>
-        <linearGradient id="site-slime-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#02229F"/>
-          <stop offset="55%" stop-color="#1a45c4"/>
-          <stop offset="100%" stop-color="#3d68f0"/>
+        <linearGradient id="site-slime-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#3558e6"/>
+          <stop offset="35%" stop-color="#1a3cbe"/>
+          <stop offset="70%" stop-color="#0e2a96"/>
+          <stop offset="100%" stop-color="#091650"/>
         </linearGradient>
         <filter id="site-slime-goo" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
@@ -1328,6 +1406,7 @@
     setupFilters();
     setupHeroWordmark();
     setupHeroFibonacciStrings();
+    setupSectionHeadGrids();
     slime?.refresh();
 
     const modal = createModalController(projects, tagsById);
