@@ -130,6 +130,52 @@ button {
   cursor: pointer;
 }
 
+/* Text-only links/buttons: underline draws left → right on hover */
+.btn,
+.brand,
+.contact-list a,
+.site-contact__email {
+  position: relative;
+  text-decoration: none;
+}
+
+.btn::after,
+.brand::after,
+.contact-list a::after,
+.site-contact__email::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.42em;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.btn:hover::after,
+.btn:focus-visible::after,
+.brand:hover::after,
+.brand:focus-visible::after,
+.contact-list a:hover::after,
+.contact-list a:focus-visible::after,
+.site-contact__email:hover::after,
+.site-contact__email:focus-visible::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn::after,
+  .brand::after,
+  .contact-list a::after,
+  .site-contact__email::after {
+    transition: none;
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1064,14 +1110,12 @@ html[data-theme="light"] .skill__track {
   font-size: 0.95rem;
   font-weight: 500;
   width: fit-content;
-  border-bottom: 1px solid transparent;
   padding-bottom: 2px;
-  transition: border-color 0.2s, color 0.2s;
+  transition: color 0.2s;
 }
 
 .contact-list a:hover,
 .contact-list a:focus-visible {
-  border-color: rgba(255, 255, 255, 0.35);
   outline: none;
 }
 
@@ -1156,49 +1200,81 @@ html[data-theme="light"] .skill__track {
   line-height: 1.65;
 }
 
-/* ── Footer ── */
+/* ── Contact + footer ── */
 
-.site-footer {
-  padding: 5rem 1.5rem 5.25rem;
-  border-top: 1px solid var(--border);
+.site-contact {
+  padding-top: 5.5rem;
+  padding-bottom: 5.25rem;
 }
 
-.site-footer__inner {
-  max-width: var(--max);
-  margin: 0 auto;
+.site-contact__grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.75rem;
+}
+
+.site-contact__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.95rem;
+}
+
+.site-contact__intro h2 {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.site-contact__lede {
+  max-width: 42ch;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.site-contact__bar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 1rem;
+  width: 100%;
 }
 
-.site-footer__email,
-.site-footer__copy {
-  font-size: 0.9rem;
+.site-contact__email {
+  justify-self: start;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.site-contact__email:hover,
+.site-contact__email:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.site-contact__social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  justify-self: center;
+}
+
+.site-contact__copy {
+  justify-self: end;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--footer-fg);
 }
 
-.site-footer__email {
-  justify-self: start;
-  transition: color 0.2s;
-}
-
-.site-footer__email:hover,
-.site-footer__email:focus-visible {
-  color: var(--muted);
-  outline: none;
-}
-
-.site-footer__copy {
-  justify-self: end;
-}
-
-.site-footer__social {
-  display: flex;
-  align-items: center;
-  gap: 1.35rem;
-  justify-self: center;
+.site-contact__social .footer-icon svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .footer-icon {
@@ -1514,16 +1590,29 @@ html[data-theme="light"] .skill__track {
     width: 75%;
   }
 
-  .site-footer__inner {
+  .site-contact__grid {
+    align-items: center;
+    text-align: center;
+  }
+
+  .site-contact__intro {
+    align-items: center;
+  }
+
+  .site-contact__bar {
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
-    gap: 1.15rem;
+    gap: 1rem;
   }
 
-  .site-footer__email,
-  .site-footer__copy {
+  .site-contact__email,
+  .site-contact__copy {
     justify-self: center;
+  }
+
+  .site-contact__lede {
+    max-width: 32ch;
   }
 
   .skill {
@@ -1531,8 +1620,7 @@ html[data-theme="light"] .skill__track {
   }
 }
 
-main,
-.site-footer {
+main {
   position: relative;
   z-index: 2;
 }
