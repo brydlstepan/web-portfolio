@@ -6,6 +6,25 @@
     "text": "I build environments, systems, and visuals in Unreal — and whatever else the brief needs. Spare time is theoretical; the work is not."
   },
   "about": "I'm a Czech Unreal Engine developer and 3D generalist. I like to make pretty things that run smooth. I'm mostly interested in realtime visualization, VR and technical stuff. I also dabble in graphics and in my free time I like to take photos on my trips.",
+  "ai": {
+    "title": "AI",
+    "lede": "Everywhere — so here’s how I actually use it.",
+    "text": "I use AI every day, and I also hate it — especially when it replaces creative thinking and authenticity. I put it on the boring, time-consuming work I don’t want, so I get more time for the creative stuff I’m good at. New tech is the fun part: I push AI past chatbot defaults and into the edge of realtime pipelines.",
+    "items": [
+      {
+        "title": "Speed the dull",
+        "text": "Automate glue, cleanup, and other chores I’d rather not do — so creative hours stay creative."
+      },
+      {
+        "title": "Keep the craft",
+        "text": "No outsourcing taste. If it starts standing in for thinking or authenticity, I’m out."
+      },
+      {
+        "title": "Ride the edge",
+        "text": "I like new tech. I wire models into tooling and Unreal workflows — not just another chat window."
+      }
+    ]
+  },
   "portrait": "assets/about/portrait.png",
   "cv": "assets/cv/Stepan-Brydl-CV.pdf",
   "skills": [

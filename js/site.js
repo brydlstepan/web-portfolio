@@ -28,6 +28,15 @@
       .join("");
   }
 
+  function renderCardMetaTags(ids, tagsById) {
+    const labels = (ids || [])
+      .map((id) => tagsById[id])
+      .filter((t) => t && t.group !== "scale")
+      .map((t) => escapeHTML(t.label));
+    if (!labels.length) return "";
+    return labels.join('<span class="project-card__sep" aria-hidden="true"> · </span>');
+  }
+
   function setupTheme() {
     const KEY = "theme";
     const root = document.documentElement;
@@ -79,38 +88,27 @@
     });
   }
 
-  function setupHeroFibonacciPulse() {
+  function setupHeroFibonacciStrings() {
     const svg = $(".hero-fibonacci");
-    if (!svg) return;
+    const hero = $(".hero");
+    if (!svg || !hero) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const layer = $(".hero-fibonacci__pulses", svg);
-    const pairNodes = $$("[data-pulse-pair]", svg);
-    if (!layer || !pairNodes.length) return;
-
-    const pairs = pairNodes
-      .map((node) => {
-        const segs = $$(".hero-fibonacci__pulse-seg", node);
-        if (segs.length < 2) return null;
-        return {
-          segs: segs.slice(0, 2),
-          flip: node.getAttribute("data-pulse-pair") !== "together",
-        };
-      })
-      .filter(Boolean);
-
-    if (!pairs.length) return;
+    const segs = $$(".hero-fibonacci__string", svg);
+    if (!layer || !segs.length) return;
 
     const svgNS = "http://www.w3.org/2000/svg";
-    const duration = 1350;
-    const halfLen = 32.4;
+    const duration = 920;
+    const packetHalf = 28;
     const halfWidth = 0.08;
-    const samples = 22;
-    const maxJobs = 2;
+    const samples = 18;
+    const maxJobs = 8;
     const pool = [];
     const jobs = [];
-    let timer = 0;
+    const strings = [];
     let raf = 0;
+    let lastHit = null;
 
     const acquire = () => {
       const got = [];
@@ -148,6 +146,50 @@
       );
     };
 
+    const toSvg = (seg, x, y) => {
+      const pt = svg.createSVGPoint();
+      pt.x = x;
+      pt.y = y;
+      const pathCtm = seg.getScreenCTM();
+      const svgCtm = svg.getScreenCTM();
+      if (!pathCtm || !svgCtm) return { x, y };
+      return pt.matrixTransform(svgCtm.inverse().multiply(pathCtm));
+    };
+
+    const clientToSvg = (clientX, clientY) => {
+      const pt = svg.createSVGPoint();
+      pt.x = clientX;
+      pt.y = clientY;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return null;
+      return pt.matrixTransform(ctm.inverse());
+    };
+
+    const wrapDist = (d, len) => {
+      let x = d % len;
+      if (x < 0) x += len;
+      return x;
+    };
+
+    const sampleString = (seg) => {
+      const len = pathLen(seg);
+      const closed = seg.getAttribute("data-closed") === "1";
+      const n = Math.max(28, Math.ceil(len / 3.5));
+      const pts = [];
+      for (let i = 0; i <= n; i += 1) {
+        const d = (i / n) * len;
+        const p = seg.getPointAtLength(Math.min(len, d));
+        const q = toSvg(seg, p.x, p.y);
+        pts.push({ d, x: q.x, y: q.y });
+      }
+      return { seg, len, closed, pts };
+    };
+
+    const rebuild = () => {
+      strings.length = 0;
+      segs.forEach((seg) => strings.push(sampleString(seg)));
+    };
+
     const tangent = (seg, len, dist) => {
       const pad = Math.min(1.4, len * 0.012);
       const a = seg.getPointAtLength(Math.max(0, dist - pad));
@@ -158,22 +200,24 @@
       return { nx: -ty / tl, ny: tx / tl };
     };
 
-    const place = (ribbon, seg, len, t) => {
-      const center = t * len;
+    const placePacket = (ribbon, string, center, opacity, wobble) => {
+      const { seg, len, closed } = string;
       const left = [];
       const right = [];
 
       for (let i = 0; i <= samples; i += 1) {
         const u = i / samples;
-        const dist = center + (u - 0.5) * 2 * halfLen;
-        if (dist < 0 || dist > len) continue;
+        let dist = center + (u - 0.5) * 2 * packetHalf;
+        if (closed) dist = wrapDist(dist, len);
+        else if (dist < 0 || dist > len) continue;
         const p = seg.getPointAtLength(dist);
         const { nx, ny } = tangent(seg, len, dist);
         const pulseBell = Math.sin(Math.PI * u);
-        const pathBell = Math.sin(Math.PI * (dist / len));
-        const w = halfWidth * pulseBell * pathBell;
-        left.push(`${p.x + nx * w},${p.y + ny * w}`);
-        right.push(`${p.x - nx * w},${p.y - ny * w}`);
+        const w = halfWidth * pulseBell;
+        const ox = nx * wobble * pulseBell;
+        const oy = ny * wobble * pulseBell;
+        left.push(`${p.x + nx * w + ox},${p.y + ny * w + oy}`);
+        right.push(`${p.x - nx * w + ox},${p.y - ny * w + oy}`);
       }
 
       if (left.length < 3) {
@@ -183,12 +227,15 @@
       }
 
       const parent = seg.parentNode;
-      ribbon.setAttribute("transform", parent.getAttribute("transform") || "");
+      const xf = parent.classList.contains("hero-fibonacci__strings")
+        ? ""
+        : parent.getAttribute("transform") || "";
+      ribbon.setAttribute("transform", xf);
       ribbon.setAttribute(
         "d",
-        `M ${left.join(" L ")} L ${right.reverse().join(" L ")} Z`
+        `M ${left.join(" L ")} L ${right.slice().reverse().join(" L ")} Z`
       );
-      ribbon.style.opacity = String(Math.sin(Math.PI * t) * 0.375);
+      ribbon.style.opacity = String(opacity);
     };
 
     const clearAll = () => {
@@ -205,10 +252,12 @@
       for (let i = jobs.length - 1; i >= 0; i -= 1) {
         const job = jobs[i];
         const t = Math.min(1, (now - job.start) / duration);
-        job.tracks.forEach((track, n) => {
-          const local = track.reverse ? 1 - t : t;
-          place(job.slots[n].el, track.seg, track.len, local);
-        });
+        const ease = 1 - (1 - t) ** 3;
+        const fade = (1 - t) ** 2 * 0.375;
+        const wobble = (1 - t) ** 2 * 0.55 * Math.sin(t * Math.PI * 2.2);
+        const travel = ease * job.travel;
+        placePacket(job.slots[0].el, job.string, job.origin + travel, fade, wobble);
+        placePacket(job.slots[1].el, job.string, job.origin - travel, fade, -wobble);
         if (t >= 1) {
           release(job.slots);
           jobs.splice(i, 1);
@@ -218,61 +267,71 @@
       else raf = 0;
     };
 
-    const fire = () => {
-      if (document.hidden) {
-        schedule();
-        return;
-      }
+    const pluck = (string, origin) => {
       if (jobs.length >= maxJobs) {
-        schedule();
-        return;
+        const old = jobs.shift();
+        release(old.slots);
       }
-
-      const busy = new Set(jobs.map((job) => job.pairIndex));
-      const open = pairs.map((_, i) => i).filter((i) => !busy.has(i));
-      if (!open.length) {
-        schedule();
-        return;
-      }
-
-      const pairIndex = open[Math.floor(Math.random() * open.length)];
-      const pair = pairs[pairIndex];
-      const reverse = Math.random() < 0.5;
       const slots = acquire();
       jobs.push({
-        pairIndex,
+        string,
+        origin,
+        travel: Math.min(string.len * 0.48, 72),
         slots,
         start: performance.now(),
-        tracks: [
-          { seg: pair.segs[0], len: pathLen(pair.segs[0]), reverse },
-          {
-            seg: pair.segs[1],
-            len: pathLen(pair.segs[1]),
-            reverse: pair.flip ? !reverse : reverse,
-          },
-        ],
       });
-
       if (!raf) raf = window.requestAnimationFrame(loop);
-      schedule();
     };
 
-    const schedule = () => {
-      window.clearTimeout(timer);
-      if (document.hidden) return;
-      timer = window.setTimeout(fire, 600 + Math.random() * 840);
+    const nearest = (x, y, threshSq) => {
+      let best = null;
+      let bestD = threshSq;
+      strings.forEach((string) => {
+        string.pts.forEach((pt) => {
+          const dx = pt.x - x;
+          const dy = pt.y - y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < bestD) {
+            bestD = d2;
+            best = { string, d: pt.d };
+          }
+        });
+      });
+      return best;
     };
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        window.clearTimeout(timer);
-        clearAll();
-      } else {
-        schedule();
+    const onMove = (e) => {
+      const p = clientToSvg(e.clientX, e.clientY);
+      if (!p) return;
+      const ctm = svg.getScreenCTM();
+      const unit = ctm ? Math.hypot(ctm.a, ctm.b) : 1;
+      const thresh = 22 / unit;
+      const hit = nearest(p.x, p.y, thresh * thresh);
+      const now = performance.now();
+      if (!hit) {
+        lastHit = null;
+        return;
       }
-    });
+      const isNew = !lastHit || lastHit.seg !== hit.string.seg;
+      const slid = lastHit && Math.abs(hit.d - lastHit.d) > 11;
+      const cooled = !lastHit || now - lastHit.time > 140;
+      if (isNew || (slid && cooled)) {
+        pluck(hit.string, hit.d);
+        lastHit = { seg: hit.string.seg, d: hit.d, time: now };
+      } else if (lastHit) {
+        lastHit.d = hit.d;
+      }
+    };
 
-    schedule();
+    rebuild();
+    hero.addEventListener("pointermove", onMove);
+    hero.addEventListener("pointerleave", () => {
+      lastHit = null;
+    });
+    window.addEventListener("resize", rebuild);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) clearAll();
+    });
   }
 
   function setupHeroWordmark() {
@@ -284,9 +343,9 @@
     const holes = $$(".hero-hole", mark);
     const maskBg = $(".hero-mask-bg", mark);
     const baseText = $(".hero-wordmark__base", mark);
-    const revealText = $(".hero-wordmark__reveal", mark);
+    const revealTexts = $$(".hero-wordmark__reveal", mark);
     const grid = $(".hero-grid", hero);
-    if (!blobs.length || !baseText || !revealText) return;
+    if (!blobs.length || !baseText || !revealTexts.length) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -315,8 +374,10 @@
       const cy = h / 2;
       baseText.setAttribute("x", String(cx));
       baseText.setAttribute("y", String(cy));
-      revealText.setAttribute("x", String(cx));
-      revealText.setAttribute("y", String(cy));
+      revealTexts.forEach((el) => {
+        el.setAttribute("x", String(cx));
+        el.setAttribute("y", String(cy));
+      });
     };
 
     const placeHole = (el, x, y, scale, rot) => {
@@ -563,17 +624,20 @@
 
     grid.innerHTML = sorted
       .map((p) => {
-        const tags = renderTags(p.tags || [], tagsById);
+        const tags = renderCardMetaTags(p.tags || [], tagsById);
+        const year = p.year ? String(p.year) : "";
         return `
           <button type="button" class="project-card" data-project-id="${escapeHTML(p.id)}" data-tags="${escapeHTML((p.tags || []).join(" "))}">
             <div class="project-card__media">
               <img src="${escapeHTML(p.cover)}" alt="" loading="lazy" />
             </div>
             <div class="project-card__body">
-              <div class="project-card__meta">${tags}</div>
+              <div class="project-card__head">
+                <div class="project-card__meta">${tags}</div>
+                ${year ? `<span class="project-card__year">${escapeHTML(year)}</span>` : ""}
+              </div>
               <h3 class="project-card__title">${escapeHTML(p.title)}</h3>
               <p class="project-card__summary">${escapeHTML(p.summary)}</p>
-              ${p.year ? `<span class="project-card__year">${escapeHTML(p.year)}</span>` : ""}
             </div>
           </button>
         `;
@@ -773,7 +837,7 @@
   function fillSiteCopy(site) {
     const brandEls = $$("[data-bind='brand']");
     brandEls.forEach((el) => {
-      el.innerHTML = `${escapeHTML(site.brand)} <span class="brand__label">— PORTFOLIO</span>`;
+      el.textContent = site.brand || "";
     });
 
     const setText = (key, value) => {
@@ -786,19 +850,14 @@
     setText("hero-title", site.hero?.title);
     setText("hero-text", site.hero?.text);
     setText("about", site.about);
+    setText("ai-title", site.ai?.title || "AI");
+    setText("ai-lede", site.ai?.lede);
+    setText("ai-text", site.ai?.text);
+    renderAiItems(site.ai?.items || []);
 
     $$("[data-bind='portrait']").forEach((el) => {
       if (site.portrait) {
         el.src = site.portrait;
-        el.hidden = false;
-      } else {
-        el.hidden = true;
-      }
-    });
-
-    $$("[data-bind='cv']").forEach((el) => {
-      if (site.cv) {
-        el.href = site.cv;
         el.hidden = false;
       } else {
         el.hidden = true;
@@ -856,6 +915,27 @@
 
   function skillIcon(id) {
     return SKILL_ICONS[id] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/></svg>';
+  }
+
+  function renderAiItems(items) {
+    const root = $("#ai-list");
+    if (!root) return;
+
+    if (!items.length) {
+      root.innerHTML = "";
+      return;
+    }
+
+    root.innerHTML = items
+      .map(
+        (item) => `
+          <div class="ai-item">
+            <h3 class="ai-item__title">${escapeHTML(item.title || "")}</h3>
+            <p class="ai-item__text">${escapeHTML(item.text || "")}</p>
+          </div>
+        `
+      )
+      .join("");
   }
 
   function renderSkills(skills) {
@@ -952,9 +1032,9 @@
     svg.innerHTML = `
       <defs>
         <linearGradient id="site-slime-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#2a3a9a"/>
-          <stop offset="55%" stop-color="#3d52c4"/>
-          <stop offset="100%" stop-color="#5a78ff"/>
+          <stop offset="0%" stop-color="#02229F"/>
+          <stop offset="55%" stop-color="#1a45c4"/>
+          <stop offset="100%" stop-color="#3d68f0"/>
         </linearGradient>
         <filter id="site-slime-goo" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
@@ -964,12 +1044,14 @@
             0 0 1 0 0
             0 0 0 18 -8" result="goo"/>
         </filter>
-        <mask id="site-slime-mask" maskUnits="userSpaceOnUse">
-          <rect class="site-slime-mask-bg" fill="white"/>
-          <g class="site-slime-cutouts"></g>
-        </mask>
+        <filter id="section-title-oil" x="-30%" y="-40%" width="160%" height="180%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="noise">
+            <animate attributeName="baseFrequency" values="0.028;0.042;0.028" dur="14s" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
       </defs>
-      <g class="site-slime__mass" filter="url(#site-slime-goo)" mask="url(#site-slime-mask)">
+      <g class="site-slime__mass" filter="url(#site-slime-goo)">
         <circle class="site-slime__cursor" cx="-100" cy="-100" r="0" fill="url(#site-slime-grad)"/>
       </g>
     `;
@@ -977,8 +1059,7 @@
 
     const mass = $(".site-slime__mass", svg);
     const cursorEl = $(".site-slime__cursor", svg);
-    const maskBg = $(".site-slime-mask-bg", svg);
-    const cutoutRoot = $(".site-slime-cutouts", svg);
+    const defs = $("defs", svg);
     const modal = $("#project-modal");
 
     let pointerX = window.innerWidth * 0.5;
@@ -987,38 +1068,27 @@
     let smoothY = pointerY;
     let pointerInside = false;
     let presence = 0;
-    /** @type {{ el: Element, body: SVGElement, amount: number }[]} */
+    let binderSeq = 0;
+    /** @type {{ el: Element, body: SVGElement, clip: SVGCircleElement, clipPath: SVGClipPathElement, group: SVGGElement, amount: number, hx: number, hy: number, title: HTMLElement | null }[]} */
     let binders = [];
 
-    /** @type {{ el: Element, rect: SVGElement }[]} */
-    let cutouts = [];
-
-    const MERGE_DIST = 56;
+    const MERGE_DIST_CARD = 38;
+    const MERGE_DIST_UI = 24;
+    const MERGE_DIST_UNDERLINE = 36;
     const CARD_RX = 12;
-    const CARD_CUTOUT_INSET = 9;
-    const CARD_SELECTOR = ".project-card, .freebie-card";
+    const CARD_SELECTOR = ".project-card__media, .freebie-card";
+    const UNDERLINE_SELECTOR = ".section-title__underline";
+    const FOOTER_ICON_SELECTOR = ".footer-icon";
+    const SKILL_FILL_SELECTOR = ".skill__fill";
     const SLIME_TARGETS =
-      `${CARD_SELECTOR}, .filter-btn, .btn, .icon-btn, .nav-toggle, .modal__close`;
+      `${CARD_SELECTOR}, ${UNDERLINE_SELECTOR}, ${FOOTER_ICON_SELECTOR}, ${SKILL_FILL_SELECTOR}, .nav > a, .filter-btn, .btn, .icon-btn, .nav-toggle, .modal__close`;
 
-    const syncMaskSize = () => {
+    const syncSize = () => {
       const w = Math.max(1, document.documentElement.clientWidth);
       const h = Math.max(1, document.documentElement.clientHeight);
       svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
       svg.setAttribute("width", String(w));
       svg.setAttribute("height", String(h));
-      if (maskBg) {
-        maskBg.setAttribute("x", "0");
-        maskBg.setAttribute("y", "0");
-        maskBg.setAttribute("width", String(w));
-        maskBg.setAttribute("height", String(h));
-      }
-    };
-
-    const makeCutout = () => {
-      const r = document.createElementNS(svgNS, "rect");
-      r.setAttribute("fill", "black");
-      cutoutRoot.appendChild(r);
-      return r;
     };
 
     const readCornerRadius = (el, box) => {
@@ -1026,76 +1096,54 @@
       return Math.min(px, box.width * 0.5, box.height * 0.5);
     };
 
-    const refreshCutouts = () => {
-      cutouts.forEach((c) => c.rect.remove());
-      cutouts = $$(CARD_SELECTOR).map((el) => ({
-        el,
-        rect: makeCutout(),
-      }));
-    };
+    const makeBinder = () => {
+      const id = `site-slime-clip-${binderSeq++}`;
+      const clipPath = document.createElementNS(svgNS, "clipPath");
+      clipPath.setAttribute("id", id);
+      clipPath.setAttribute("clipPathUnits", "userSpaceOnUse");
+      const clip = document.createElementNS(svgNS, "circle");
+      clip.setAttribute("r", "0");
+      clipPath.appendChild(clip);
+      defs.appendChild(clipPath);
 
-    const updateCutouts = () => {
-      cutouts.forEach(({ el, rect }) => {
-        if (el.classList.contains("is-hidden")) {
-          rect.setAttribute("width", "0");
-          rect.setAttribute("height", "0");
-          return;
-        }
-        const box = el.getBoundingClientRect();
-        if (box.width < 8 || box.height < 8) {
-          rect.setAttribute("width", "0");
-          rect.setAttribute("height", "0");
-          return;
-        }
-        const fullRx = readCornerRadius(el, box);
-        const inset = CARD_CUTOUT_INSET;
-        const cutW = Math.round(box.width) - inset * 2;
-        const cutH = Math.round(box.height) - inset * 2;
-        if (cutW < 4 || cutH < 4) {
-          rect.setAttribute("width", "0");
-          rect.setAttribute("height", "0");
-          return;
-        }
-        const cutRx = Math.max(0, fullRx - inset);
-        // Inset cutout — concentric with card corners
-        rect.setAttribute("x", String(Math.round(box.left) + inset));
-        rect.setAttribute("y", String(Math.round(box.top) + inset));
-        rect.setAttribute("width", String(cutW));
-        rect.setAttribute("height", String(cutH));
-        rect.setAttribute("rx", String(cutRx));
-        rect.setAttribute("ry", String(cutRx));
-      });
-    };
-
-    const makeRect = () => {
-      const r = document.createElementNS(svgNS, "rect");
-      r.setAttribute("fill", "url(#site-slime-grad)");
-      r.setAttribute("rx", String(CARD_RX));
-      r.setAttribute("ry", String(CARD_RX));
-      r.setAttribute("width", "0");
-      r.setAttribute("height", "0");
-      mass.appendChild(r);
-      return r;
+      const group = document.createElementNS(svgNS, "g");
+      group.setAttribute("clip-path", `url(#${id})`);
+      const body = document.createElementNS(svgNS, "rect");
+      body.setAttribute("fill", "url(#site-slime-grad)");
+      body.setAttribute("width", "0");
+      body.setAttribute("height", "0");
+      group.appendChild(body);
+      mass.appendChild(group);
+      return { body, clip, clipPath, group };
     };
 
     const refresh = () => {
-      binders.forEach((b) => b.body.remove());
-      binders = $$(SLIME_TARGETS).map((el) => ({
-        el,
-        body: makeRect(),
-        amount: 0,
-      }));
-      refreshCutouts();
+      binders.forEach((b) => {
+        b.group.remove();
+        b.clipPath.remove();
+      });
+      binders = $$(SLIME_TARGETS).map((el) => {
+        const parts = makeBinder();
+        return {
+          el,
+          ...parts,
+          amount: 0,
+          hx: 0,
+          hy: 0,
+          title: el.matches(UNDERLINE_SELECTOR)
+            ? el.closest(".section-title")
+            : null,
+        };
+      });
     };
 
-    const distToRect = (px, py, rect) => {
-      const cx = Math.max(rect.left, Math.min(px, rect.right));
-      const cy = Math.max(rect.top, Math.min(py, rect.bottom));
-      return Math.hypot(px - cx, py - cy);
-    };
+    const nearestOnRect = (px, py, rect) => ({
+      x: Math.max(rect.left, Math.min(px, rect.right)),
+      y: Math.max(rect.top, Math.min(py, rect.bottom)),
+    });
 
     const tick = () => {
-      syncMaskSize();
+      syncSize();
       const modalOpen = modal?.classList.contains("is-open");
       presence += ((pointerInside && !modalOpen ? 1 : 0) - presence) * 0.12;
       smoothX += (pointerX - smoothX) * 0.18;
@@ -1105,63 +1153,142 @@
 
       binders.forEach((b) => {
         const rect = b.el.getBoundingClientRect();
-        if (rect.width < 8 || rect.height < 8 || b.el.classList.contains("is-hidden")) {
-          b.amount += (0 - b.amount) * 0.18;
+        if (
+          rect.width < 4 ||
+          rect.height < 2 ||
+          b.el.classList.contains("is-hidden") ||
+          b.el.closest(".project-card")?.classList.contains("is-hidden")
+        ) {
+          b.amount += (0 - b.amount) * 0.2;
         } else {
-          const d = distToRect(smoothX, smoothY, rect);
-          // Smaller targets (pills) need a tighter reach than cards
-          const isCard = b.el.matches(".project-card, .freebie-card");
-          const reach = isCard ? MERGE_DIST : Math.min(MERGE_DIST, 36);
-          const target = modalOpen ? 0 : Math.max(0, 1 - d / reach) ** 1.8;
-          b.amount += (target - b.amount) * 0.14;
+          const hit = nearestOnRect(smoothX, smoothY, rect);
+          const d = Math.hypot(smoothX - hit.x, smoothY - hit.y);
+          const isCard = b.el.matches(CARD_SELECTOR);
+          const isUnderline = Boolean(b.title);
+          const isFooterIcon = b.el.matches(FOOTER_ICON_SELECTOR);
+          const reach = isUnderline
+            ? MERGE_DIST_UNDERLINE
+            : isFooterIcon
+              ? MERGE_DIST_UI + 6
+              : isCard
+                ? MERGE_DIST_CARD
+                : MERGE_DIST_UI;
+          const target = modalOpen ? 0 : Math.max(0, 1 - d / reach) ** 2.1;
+          b.amount += (target - b.amount) * 0.16;
+          if (b.amount < 0.02) {
+            b.hx = hit.x;
+            b.hy = hit.y;
+          } else {
+            b.hx += (hit.x - b.hx) * 0.22;
+            b.hy += (hit.y - b.hy) * 0.22;
+          }
           nearBoost = Math.max(nearBoost, b.amount);
         }
 
         const a = b.amount;
+        if (b.title) {
+          const filling = a > 0.02;
+          b.title.classList.toggle("is-filling", filling);
+          if (filling) {
+            const titleRect = b.title.getBoundingClientRect();
+            b.title.style.setProperty("--fill-x", `${b.hx - titleRect.left}px`);
+            b.title.style.setProperty("--fill-y", `${b.hy - titleRect.top}px`);
+            b.title.style.setProperty(
+              "--fill-r",
+              `${12 + a * Math.hypot(titleRect.width, titleRect.height) * 1.05}px`
+            );
+          } else {
+            b.title.style.setProperty("--fill-r", "0px");
+          }
+        }
+
         if (a < 0.01) {
           b.body.setAttribute("width", "0");
           b.body.setAttribute("height", "0");
+          b.clip.setAttribute("r", "0");
           return;
         }
 
         const isCard = b.el.matches(CARD_SELECTOR);
-        const pad = isCard ? 2.5 + a * 3.8 : 0.5 + a * 1.1;
-        const cornerRx = readCornerRadius(b.el, rect);
+        const isUnderline = Boolean(b.title);
+        const isFooterIcon = b.el.matches(FOOTER_ICON_SELECTOR);
 
-        if (isCard) {
-          // Concentric outer rect — outer radius = card radius + pad
-          const outerRx = cornerRx + pad;
-          b.body.setAttribute("fill", "url(#site-slime-grad)");
-          b.body.setAttribute("stroke", "none");
-          b.body.setAttribute("x", String(rect.left - pad));
-          b.body.setAttribute("y", String(rect.top - pad));
-          b.body.setAttribute("width", String(rect.width + pad * 2));
-          b.body.setAttribute("height", String(rect.height + pad * 2));
-          b.body.setAttribute("rx", String(outerRx));
-          b.body.setAttribute("ry", String(outerRx));
-          b.body.setAttribute("opacity", String(0.55 + a * 0.38));
+        if (isFooterIcon) {
+          // Filled circle around the icon that merges with the cursor goo.
+          const pad = 6 + a * 10;
+          const size = (Math.max(rect.width, rect.height) + pad * 2) * 0.67;
+          const cx = rect.left + rect.width * 0.5;
+          const cy = rect.top + rect.height * 0.5;
+          b.body.setAttribute("x", String(cx - size * 0.5));
+          b.body.setAttribute("y", String(cy - size * 0.5));
+          b.body.setAttribute("width", String(size));
+          b.body.setAttribute("height", String(size));
+          b.body.setAttribute("rx", String(size * 0.5));
+          b.body.setAttribute("ry", String(size * 0.5));
+          b.body.setAttribute("opacity", String(0.5 + a * 0.42));
+          const clipR = 10 + a * size * 0.85;
+          b.clip.setAttribute("cx", String(b.hx));
+          b.clip.setAttribute("cy", String(b.hy));
+          b.clip.setAttribute("r", String(clipR));
           return;
         }
 
-        b.body.setAttribute("fill", "url(#site-slime-grad)");
-        b.body.setAttribute("stroke", "none");
-        const rx = Math.min(
-          cornerRx + pad,
+        if (isUnderline) {
+          // Thick enough for goo blur, but keep the line reading sharp.
+          const padX = 1.5 + a * 1.5;
+          const h = 9 + a * 2.5;
+          const cy = rect.top + rect.height * 0.5;
+          const w = rect.width + padX * 2;
+          const rx = Math.min(h * 0.5, 3);
+          b.body.setAttribute("x", String(rect.left - padX));
+          b.body.setAttribute("y", String(cy - h * 0.5));
+          b.body.setAttribute("width", String(w));
+          b.body.setAttribute("height", String(h));
+          b.body.setAttribute("rx", String(rx));
+          b.body.setAttribute("ry", String(rx));
+          b.body.setAttribute("opacity", String(0.55 + a * 0.4));
+          const clipR = 14 + a * Math.hypot(w, h) * 0.95;
+          b.clip.setAttribute("cx", String(b.hx));
+          b.clip.setAttribute("cy", String(b.hy));
+          b.clip.setAttribute("r", String(clipR));
+          return;
+        }
+
+        const isSkillFill = b.el.matches(SKILL_FILL_SELECTOR);
+        const pad = isSkillFill
+          ? 2.5 + a * 2.8
+          : isCard
+            ? 2 + a * 3.2
+            : 1.2 + a * 1.4;
+        const cornerRx = isSkillFill
+          ? Math.min((rect.height + pad * 2) * 0.5, 8)
+          : readCornerRadius(b.el, rect);
+        // Cards keep element radius; UI gets concentric merge corners.
+        const outerRx = Math.min(
+          cornerRx + (isCard || isSkillFill ? 0 : pad),
           (rect.width + pad * 2) * 0.5,
           (rect.height + pad * 2) * 0.5
         );
+
         b.body.setAttribute("x", String(rect.left - pad));
         b.body.setAttribute("y", String(rect.top - pad));
         b.body.setAttribute("width", String(rect.width + pad * 2));
         b.body.setAttribute("height", String(rect.height + pad * 2));
-        b.body.setAttribute("rx", String(rx));
-        b.body.setAttribute("ry", String(rx));
-        b.body.setAttribute("opacity", String(0.5 + a * 0.35));
+        b.body.setAttribute("rx", String(outerRx));
+        b.body.setAttribute("ry", String(outerRx));
+        b.body.setAttribute(
+          "opacity",
+          String(isSkillFill ? 0.88 + a * 0.12 : 0.52 + a * 0.4)
+        );
+
+        const diag = Math.hypot(rect.width + pad * 2, rect.height + pad * 2);
+        const clipR = 16 + a * diag * 0.92;
+        b.clip.setAttribute("cx", String(b.hx));
+        b.clip.setAttribute("cy", String(b.hy));
+        b.clip.setAttribute("r", String(clipR));
       });
 
-      updateCutouts();
-
-      const cursorR = presence * (11 + nearBoost * 6);
+      const cursorR = presence * (11 + nearBoost * 3.75);
       cursorEl.setAttribute("cx", String(smoothX));
       cursorEl.setAttribute("cy", String(smoothY));
       cursorEl.setAttribute("r", String(Math.max(0, cursorR)));
@@ -1190,8 +1317,8 @@
     });
 
     refresh();
-    syncMaskSize();
-    window.addEventListener("resize", syncMaskSize);
+    syncSize();
+    window.addEventListener("resize", syncSize);
     requestAnimationFrame(tick);
 
     return { refresh };
@@ -1210,7 +1337,7 @@
     buildProjects(projects, tagsById);
     setupFilters();
     setupHeroWordmark();
-    setupHeroFibonacciPulse();
+    setupHeroFibonacciStrings();
     slime?.refresh();
 
     const modal = createModalController(projects, tagsById);
