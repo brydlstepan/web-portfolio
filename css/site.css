@@ -133,16 +133,14 @@ button {
 /* Text-only links/buttons: underline draws left → right on hover */
 .btn,
 .brand,
-.contact-list a,
-.site-contact__email {
+.contact-list a {
   position: relative;
   text-decoration: none;
 }
 
 .btn::after,
 .brand::after,
-.contact-list a::after,
-.site-contact__email::after {
+.contact-list a::after {
   content: "";
   position: absolute;
   left: 0;
@@ -161,17 +159,14 @@ button {
 .brand:hover::after,
 .brand:focus-visible::after,
 .contact-list a:hover::after,
-.contact-list a:focus-visible::after,
-.site-contact__email:hover::after,
-.site-contact__email:focus-visible::after {
+.contact-list a:focus-visible::after {
   transform: scaleX(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .btn::after,
   .brand::after,
-  .contact-list a::after,
-  .site-contact__email::after {
+  .contact-list a::after {
     transition: none;
   }
 }
@@ -443,6 +438,10 @@ button {
   .section__lede {
     white-space: normal;
     max-width: 28ch;
+  }
+
+  .skills-list {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -924,9 +923,13 @@ html[data-theme="light"] .hero-fibonacci__draw {
 
 /* ── AI ── */
 
+#ai .section__head {
+  margin-bottom: 2.75rem;
+}
+
 .ai-copy {
   max-width: 40rem;
-  margin: 0 auto 2.25rem;
+  margin: 0 auto 4rem;
   text-align: center;
 }
 
@@ -957,14 +960,9 @@ html[data-theme="light"] .hero-fibonacci__draw {
 
 /* ── About / Contact ── */
 
-.about-intro {
-  max-width: 42rem;
-  margin: 0 auto 2rem;
-  text-align: center;
-}
-
-.about-intro .prose {
-  margin: 0 auto;
+#about .section__lede {
+  white-space: normal;
+  max-width: 58ch;
 }
 
 .about-layout {
@@ -1017,6 +1015,8 @@ html[data-theme="light"] .hero-fibonacci__draw {
   margin-top: 0.25rem;
   justify-self: stretch;
   min-width: 0;
+  container-type: inline-size;
+  container-name: skills;
 }
 
 .skills__title {
@@ -1031,9 +1031,15 @@ html[data-theme="light"] .hero-fibonacci__draw {
 .skills-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 2.5rem;
+  gap: 1rem 1.3125rem;
   max-width: none;
   width: 100%;
+}
+
+@container skills (min-width: 40rem) {
+  .skills-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .skill {
@@ -1066,8 +1072,8 @@ html[data-theme="light"] .hero-fibonacci__draw {
 
 .skill__track {
   height: 4.5px;
-  width: 50%;
-  min-width: 6.75rem;
+  width: 62.5%;
+  min-width: 8.4375rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -1119,106 +1125,26 @@ html[data-theme="light"] .skill__track {
   outline: none;
 }
 
-/* ── Freebies ── */
-
-.freebie-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-}
-
-.freebie-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 4;
-  transition: border-color 0.2s, transform 0.2s;
-}
-
-.freebie-card:hover,
-.freebie-card:focus-within {
-  border-color: rgba(255, 255, 255, 0.28);
-  transform: translateY(-2px);
-}
-
-.freebie-card__media {
-  aspect-ratio: 16 / 10;
-  background: #0a0a0a;
-}
-
-.freebie-card__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.freebie-card__body {
-  padding: 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  flex: 1;
-}
-
-.freebie-card__title {
-  font-size: 1.05rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-}
-
-.freebie-card__desc {
-  font-size: 0.875rem;
-  color: var(--muted);
-  line-height: 1.55;
-  flex: 1;
-}
-
-.freebie-card .btn {
-  align-self: flex-start;
-  margin-top: 0.35rem;
-}
-
-.page-hero {
-  padding: 3.5rem 0 2rem;
-}
-
-.page-hero h1 {
-  font-size: clamp(2rem, 5vw, 2.75rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  margin-bottom: 0.85rem;
-}
-
-.page-hero p {
-  max-width: 48ch;
-  color: var(--muted);
-  font-size: 0.975rem;
-  line-height: 1.65;
-}
-
 /* ── Contact + footer ── */
 
 .site-contact {
   padding-top: 5.5rem;
-  padding-bottom: 5.25rem;
+  padding-bottom: 4.875rem;
 }
 
 .site-contact__grid {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1.75rem;
+  gap: 4rem;
 }
 
 .site-contact__intro {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.95rem;
+  gap: 1.15rem;
+  margin-top: -0.5rem;
 }
 
 .site-contact__intro h2 {
@@ -1241,19 +1167,21 @@ html[data-theme="light"] .skill__track {
   align-items: center;
   gap: 1rem;
   width: 100%;
+  margin-top: 0.75rem;
 }
 
 .site-contact__email {
   justify-self: start;
-  font-size: 0.8125rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--text);
+  text-decoration: none;
   transition: color 0.2s;
 }
 
 .site-contact__email:hover,
 .site-contact__email:focus-visible {
-  color: var(--text);
+  color: var(--accent-bright);
   outline: none;
 }
 
@@ -1261,7 +1189,7 @@ html[data-theme="light"] .skill__track {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.75rem;
   justify-self: center;
 }
 
@@ -1554,8 +1482,7 @@ html[data-theme="light"] .skill__track {
     border-top: 1px solid var(--border);
   }
 
-  .project-grid,
-  .freebie-grid {
+  .project-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1575,11 +1502,6 @@ html[data-theme="light"] .skill__track {
     width: 100%;
   }
 
-  .skills-list {
-    grid-template-columns: 1fr;
-    max-width: none;
-  }
-
   .ai-list {
     grid-template-columns: 1fr;
     gap: 1.35rem;
@@ -1587,7 +1509,7 @@ html[data-theme="light"] .skill__track {
   }
 
   .skill__track {
-    width: 75%;
+    width: 93.75%;
   }
 
   .site-contact__grid {
@@ -1704,8 +1626,7 @@ html[data-theme="light"] .site-slime.is-active {
     transition: none;
   }
 
-  .project-card:hover .project-card__media,
-  .freebie-card:hover {
+  .project-card:hover .project-card__media {
     transform: none;
   }
 

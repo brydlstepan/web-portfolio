@@ -969,7 +969,17 @@
     setText("hero-title", site.hero?.title);
     setText("hero-text", site.hero?.text);
     setText("about", site.about);
-    setText("ai-title", site.ai?.title || "AI");
+    const aiTitle = site.ai?.title || "AI";
+    const aiEmphasis = site.ai?.titleEmphasis;
+    $$(`[data-bind='ai-title']`).forEach((el) => {
+      if (aiEmphasis && aiTitle.includes(aiEmphasis)) {
+        const idx = aiTitle.indexOf(aiEmphasis);
+        el.innerHTML =
+          `${escapeHTML(aiTitle.slice(0, idx))}<em>${escapeHTML(aiEmphasis)}</em>${escapeHTML(aiTitle.slice(idx + aiEmphasis.length))}`;
+      } else {
+        el.textContent = aiTitle;
+      }
+    });
     setText("ai-lede", site.ai?.lede);
     setText("ai-text", site.ai?.text);
     renderAiItems(site.ai?.items || []);
@@ -1003,7 +1013,6 @@
       instagram: site.social?.instagram,
       photography: site.social?.photography,
       artstation: site.social?.artstation,
-      behance: site.social?.behance,
     };
 
     Object.entries(map).forEach(([key, url]) => {
@@ -1026,6 +1035,8 @@
     "ai-content": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="m18 14 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/></svg>',
     blender: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(120 12 12)"/></svg>',
     substance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 17c4-8 6-11 8-11s2 5 8 11"/><path d="M8 17h8"/><circle cx="12" cy="7" r="2"/></svg>',
+    "substance-painter": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 17c4-8 6-11 8-11s2 5 8 11"/><path d="M8 17h8"/><circle cx="12" cy="7" r="2"/></svg>',
+    "substance-designer": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 16l3-8 3 5 2-3"/></svg>',
     git: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M6 8.2v7.6M8.2 18h7.6M7.6 7.6 16 16"/></svg>',
     photoshop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 16V8h2.4c1.6 0 2.6.9 2.6 2.3S12 12.6 10.4 12.6H8"/></svg>',
     premiere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9z"/></svg>',
@@ -1068,7 +1079,8 @@
 
     root.innerHTML = skills
       .map((skill) => {
-        const level = Math.max(0, Math.min(100, Number(skill.level) || 0));
+        const score = Math.max(0, Math.min(10, Number(skill.level) || 0));
+        const percent = score * 10;
         const id = skill.id || skill.name.toLowerCase().replace(/\s+/g, "-");
         return `
           <div class="skill">
@@ -1076,8 +1088,8 @@
               <span class="skill__icon" aria-hidden="true">${skillIcon(id)}</span>
               <span>${escapeHTML(skill.name)}</span>
             </div>
-            <div class="skill__track" role="meter" aria-label="${escapeHTML(skill.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${level}">
-              <div class="skill__fill" data-level="${level}"></div>
+            <div class="skill__track" role="meter" aria-label="${escapeHTML(skill.name)}" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${score}">
+              <div class="skill__fill" data-level="${percent}"></div>
             </div>
           </div>
         `;
@@ -1107,37 +1119,6 @@
       { threshold: 0.25 }
     );
     io.observe(root);
-  }
-
-  function buildFreebies(freebies) {
-    const grid = $("#freebie-grid");
-    if (!grid) return;
-
-    const items = [...freebies]
-      .filter((f) => f.published)
-      .sort((a, b) => a.order - b.order);
-
-    if (!items.length) {
-      grid.innerHTML = `<p class="prose">Nothing here yet — check back when spare time restocks.</p>`;
-      return;
-    }
-
-    grid.innerHTML = items
-      .map(
-        (f) => `
-        <article class="freebie-card">
-          <div class="freebie-card__media">
-            <img src="${escapeHTML(f.image)}" alt="" loading="lazy" />
-          </div>
-          <div class="freebie-card__body">
-            <h2 class="freebie-card__title">${escapeHTML(f.title)}</h2>
-            <p class="freebie-card__desc">${escapeHTML(f.description)}</p>
-            <a class="btn" href="${escapeHTML(f.url)}" target="_blank" rel="noopener noreferrer">↳ Get freebie</a>
-          </div>
-        </article>
-      `
-      )
-      .join("");
   }
 
   function setupSiteSlime() {
@@ -1189,7 +1170,7 @@
     const MERGE_DIST_CARD = 38;
     const MERGE_DIST_UI = 24;
     const CARD_RX = 12;
-    const CARD_SELECTOR = ".project-card__media, .freebie-card";
+    const CARD_SELECTOR = ".project-card__media";
     const FOOTER_ICON_SELECTOR = ".footer-icon";
     const SKILL_FILL_SELECTOR = ".skill__fill";
     const SLIME_TARGETS =
@@ -1426,22 +1407,11 @@
     });
   }
 
-  async function initFreebies(slime) {
-    const [site, freebies] = await Promise.all([
-      loadJSON("content/site.json"),
-      loadJSON("content/freebies.json"),
-    ]);
-    fillSiteCopy(site);
-    buildFreebies(freebies);
-    slime?.refresh();
-  }
-
   document.addEventListener("DOMContentLoaded", () => {
     setupNav();
     setupTheme();
     const slime = setupSiteSlime();
     const page = document.body.dataset.page;
     if (page === "home") initHome(slime).catch(console.error);
-    if (page === "freebies") initFreebies(slime).catch(console.error);
   });
 })();

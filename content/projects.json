@@ -1,5 +1,161 @@
 [
   {
+    "id": "archviz",
+    "title": "Archviz",
+    "tags": ["unreal", "3d", "ar-vr", "visualization", "large"],
+    "summary": "Realtime VR walkthroughs of architecture that does not exist yet.",
+    "description": "Unbuilt buildings presented as immersive VR walkthroughs — spatial scale, materials, and light readable at full scale before anything is constructed.",
+    "year": 2024,
+    "role": "Realtime visualization, VR",
+    "tools": ["Unreal Engine"],
+    "cover": "assets/projects/placeholders/viz.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "Architectural visualization"
+      }
+    ],
+    "links": [],
+    "featured": true,
+    "order": 1,
+    "published": true
+  },
+  {
+    "id": "wild-science",
+    "title": "Wild Science",
+    "tags": ["unreal", "3d", "large"],
+    "summary": "Six-episode series on the hidden traits and remarkable abilities of selected animals.",
+    "description": "A documentary-style Unreal production covering traits that are well known in science but rarely captured on screen — each episode built around one species and its underexplored skills.",
+    "year": 2026,
+    "role": "Realtime 3D, series production",
+    "tools": ["Unreal Engine"],
+    "cover": "assets/projects/placeholders/viz.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "Wild Science"
+      }
+    ],
+    "links": [],
+    "featured": true,
+    "order": 2,
+    "published": true
+  },
+  {
+    "id": "vr-showroom",
+    "title": "VR Showroom",
+    "tags": ["unreal", "3d", "ar-vr", "visualization", "medium"],
+    "summary": "VR for teaching and presenting ideas, objects, and spaces that are hard to grasp or costly to show in person.",
+    "description": "An educational VR showroom — abstract concepts, fragile artifacts, and large-scale environments presented interactively when physical demos are impractical or impossible.",
+    "year": 2026,
+    "role": "VR development, visualization",
+    "tools": ["Unreal Engine"],
+    "cover": "assets/projects/placeholders/viz.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "VR Showroom"
+      }
+    ],
+    "links": [],
+    "featured": false,
+    "order": 3,
+    "published": true
+  },
+  {
+    "id": "dinopark-vr",
+    "title": "Dinopark VR",
+    "tags": ["unreal", "3d", "ar-vr", "medium"],
+    "summary": "Short VR animated film spanning three dinosaur epochs.",
+    "description": "A compact VR experience — stylized prehistoric worlds from three geological periods, told as a single immersive animated short.",
+    "year": 2025,
+    "role": "VR animation, environment art",
+    "tools": ["Unreal Engine"],
+    "cover": "assets/projects/placeholders/neon.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/neon.svg",
+        "alt": "Dinopark VR"
+      }
+    ],
+    "links": [],
+    "featured": false,
+    "order": 4,
+    "published": true
+  },
+  {
+    "id": "soma",
+    "title": "SOMA",
+    "tags": ["unreal", "3d", "visualization", "medium"],
+    "summary": "Product visualization spot.",
+    "description": "A focused realtime product spot — lighting, materials, and camera work built around a single hero asset.",
+    "year": 2024,
+    "role": "Product visualization",
+    "tools": ["Unreal Engine"],
+    "cover": "assets/projects/placeholders/viz.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "SOMA"
+      }
+    ],
+    "links": [],
+    "featured": false,
+    "order": 5,
+    "published": true
+  },
+  {
+    "id": "kleeya",
+    "title": "Kleeya",
+    "tags": ["unreal", "3d", "visualization", "medium"],
+    "summary": "Product visualization spot.",
+    "description": "A focused realtime product spot — lighting, materials, and camera work built around a single hero asset.",
+    "year": 2023,
+    "role": "Product visualization",
+    "tools": ["Unreal Engine"],
+    "cover": "assets/projects/placeholders/viz.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/viz.svg",
+        "alt": "Kleeya"
+      }
+    ],
+    "links": [],
+    "featured": false,
+    "order": 6,
+    "published": true
+  },
+  {
+    "id": "portfolio-shell",
+    "title": "This Portfolio",
+    "tags": ["web", "medium"],
+    "summary": "The site you're looking at — static, tagged, and still under construction.",
+    "description": "A black-and-white one-pager with frosted glass, tag filters, and a local configurator in the works. Built to stay free to host and easy to update without a CMS.",
+    "year": 2026,
+    "role": "Design, front-end",
+    "tools": ["HTML", "CSS", "JavaScript"],
+    "cover": "assets/projects/placeholders/web.svg",
+    "gallery": [
+      {
+        "type": "image",
+        "src": "assets/projects/placeholders/web.svg",
+        "alt": "Site shell"
+      }
+    ],
+    "links": [
+      { "label": "GitHub", "url": "https://github.com/brydlstepan/web-portfolio" }
+    ],
+    "featured": false,
+    "order": 7,
+    "published": true
+  },
+  {
     "id": "neon-district",
     "title": "Neon District",
     "tags": ["unreal", "3d", "ar-vr", "large"],
@@ -23,8 +179,8 @@
     ],
     "links": [],
     "featured": true,
-    "order": 1,
-    "published": true
+    "order": 98,
+    "published": false
   },
   {
     "id": "atelier-viz",
@@ -50,13 +206,13 @@
     ],
     "links": [],
     "featured": false,
-    "order": 2,
-    "published": true
+    "order": 99,
+    "published": false
   },
   {
     "id": "glyph-set",
     "title": "Glyph Set",
-    "tags": ["graphics", "medium"],
+    "tags": ["medium"],
     "summary": "A compact icon and mark system for a product launch.",
     "description": "Grid-based glyphs with a small family of variants. Designed to work at UI sizes and as larger print marks without losing structure.",
     "year": 2024,
@@ -72,31 +228,7 @@
     ],
     "links": [],
     "featured": false,
-    "order": 3,
-    "published": true
-  },
-  {
-    "id": "portfolio-shell",
-    "title": "This Portfolio",
-    "tags": ["web", "medium"],
-    "summary": "The site you're looking at — static, tagged, and still under construction.",
-    "description": "A black-and-white one-pager with frosted glass, tag filters, and a local configurator in the works. Built to stay free to host and easy to update without a CMS.",
-    "year": 2026,
-    "role": "Design, front-end",
-    "tools": ["HTML", "CSS", "JavaScript"],
-    "cover": "assets/projects/placeholders/web.svg",
-    "gallery": [
-      {
-        "type": "image",
-        "src": "assets/projects/placeholders/web.svg",
-        "alt": "Site shell"
-      }
-    ],
-    "links": [
-      { "label": "GitHub", "url": "https://github.com/brydlstepan/web-portfolio" }
-    ],
-    "featured": false,
-    "order": 4,
-    "published": true
+    "order": 100,
+    "published": false
   }
 ]

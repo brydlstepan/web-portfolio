@@ -5,10 +5,11 @@
     "title": "Realtime worlds, still frames, and the odd website.",
     "text": "I build environments, systems, and visuals in Unreal — and whatever else the brief needs. Spare time is theoretical; the work is not."
   },
-  "about": "I'm a Czech Unreal Engine developer and 3D generalist. I like to make pretty things that run smooth. I'm mostly interested in realtime visualization, VR and technical stuff. I also dabble in graphics and in my free time I like to take photos on my trips.",
+  "about": "I'm a Unreal Engine developer and 3D generalist. I like to make pretty things that run smooth. I'm mostly interested in realtime visualization, VR and technical stuff. I also dabble in graphics and web, and in my free time I like to take photos on my trips.",
   "ai": {
-    "title": "AI",
-    "lede": "Everywhere — so here’s how I actually use it.",
+    "title": "Artificial Intelligence",
+    "titleEmphasis": "Intelligence",
+    "lede": "AI is everywhere — so here's how I actually use it.",
     "text": "I use AI every day, and I also hate it — especially when it replaces creative thinking and authenticity. I put it on the boring, time-consuming work I don’t want, so I get more time for the creative stuff I’m good at. New tech is the fun part: I push AI past chatbot defaults and into the edge of realtime pipelines.",
     "items": [
       {
@@ -28,15 +29,24 @@
   "portrait": "assets/about/portrait.png",
   "cv": "assets/cv/Stepan-Brydl-CV.pdf",
   "skills": [
-    { "id": "unreal", "name": "Unreal Engine", "level": 100 },
-    { "id": "ai-dev", "name": "AI Development", "level": 85 },
-    { "id": "ai-content", "name": "AI Content", "level": 80 },
-    { "id": "blender", "name": "Blender", "level": 90 },
-    { "id": "substance", "name": "Substance Painter", "level": 85 },
-    { "id": "git", "name": "Git", "level": 75 },
-    { "id": "photoshop", "name": "Photoshop", "level": 90 },
-    { "id": "premiere", "name": "Premiere", "level": 70 },
-    { "id": "lightroom", "name": "Lightroom", "level": 80 }
+    { "id": "unreal", "name": "Unreal Engine", "level": 10 },
+    { "id": "3dsmax", "name": "Autodesk 3ds Max", "level": 10 },
+    { "id": "substance-painter", "name": "Substance Painter", "level": 10 },
+    { "id": "figma", "name": "Figma", "level": 10 },
+    { "id": "blender", "name": "Blender", "level": 7 },
+    { "id": "ai-dev", "name": "AI Development", "level": 7 },
+    { "id": "ai-content", "name": "AI content generation", "level": 7 },
+    { "id": "docker", "name": "Docker", "level": 8 },
+    { "id": "photoshop", "name": "Adobe Photoshop", "level": 8 },
+    { "id": "lightroom", "name": "Adobe Lightroom", "level": 8 },
+    { "id": "premiere", "name": "Adobe Premiere", "level": 8 },
+    { "id": "indesign", "name": "Adobe InDesign", "level": 8 },
+    { "id": "git", "name": "Git", "level": 7 },
+    { "id": "html-css", "name": "HTML/CSS", "level": 7 },
+    { "id": "cinema4d", "name": "Cinema 4D", "level": 4 },
+    { "id": "substance-designer", "name": "Substance Designer", "level": 3 },
+    { "id": "maya", "name": "Autodesk Maya", "level": 3 },
+    { "id": "unity", "name": "Unity", "level": 3 }
   ],
   "contact": {
     "email": "brydlstepan@gmail.com"
@@ -46,7 +56,6 @@
     "linkedin": "https://www.linkedin.com/in/brydlstepan",
     "instagram": "https://www.instagram.com/brydlstepan",
     "photography": "https://www.instagram.com/roving.shots",
-    "artstation": "https://www.artstation.com/brydlstepan",
-    "behance": "https://www.behance.net/brydlstepan"
+    "artstation": "https://www.artstation.com/brydlstepan"
   }
 }
