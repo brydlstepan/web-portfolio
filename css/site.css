@@ -307,77 +307,6 @@ button {
   line-height: 1.15;
 }
 
-.section-title {
-  display: inline-grid;
-  justify-items: stretch;
-  align-items: center;
-  margin: 0;
-  row-gap: 0.4rem;
-}
-
-.section-title__base,
-.section-title__fill {
-  grid-area: 1 / 1;
-  justify-self: center;
-}
-
-.section-title__underline {
-  grid-area: 2 / 1;
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  background: transparent;
-  pointer-events: none;
-}
-
-.section-title.is-filling .section-title__base {
-  /* Punch white out where goo fills so no undertone shows through. */
-  -webkit-mask-image: radial-gradient(
-    circle var(--fill-r, 0px) at var(--fill-x, 50%) var(--fill-y, 50%),
-    transparent 62%,
-    #000 88%
-  );
-  mask-image: radial-gradient(
-    circle var(--fill-r, 0px) at var(--fill-x, 50%) var(--fill-y, 50%),
-    transparent 62%,
-    #000 88%
-  );
-}
-
-.section-title__fill {
-  /* Same glyphs as base — no displacement, or white edges bleed through. */
-  color: #1a45c4;
-  background: linear-gradient(
-    125deg,
-    #01105a 0%,
-    #02229f 38%,
-    #1a45c4 72%,
-    #3d68f0 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  /* Slight stroke in fill color covers subpixel gaps against the base. */
-  -webkit-text-stroke: 0.55px #1a45c4;
-  pointer-events: none;
-  opacity: 0;
-  -webkit-mask-image: radial-gradient(
-    circle var(--fill-r, 0px) at var(--fill-x, 50%) var(--fill-y, 50%),
-    #000 62%,
-    transparent 88%
-  );
-  mask-image: radial-gradient(
-    circle var(--fill-r, 0px) at var(--fill-x, 50%) var(--fill-y, 50%),
-    #000 62%,
-    transparent 88%
-  );
-  transition: opacity 0.15s ease;
-}
-
-.section-title.is-filling .section-title__fill {
-  opacity: 1;
-}
-
 .section__lede {
   max-width: none;
   font-size: 0.95rem;
@@ -416,6 +345,8 @@ button {
   height: 270%;
   pointer-events: none;
   overflow: visible;
+  transform-origin: 50% 48%;
+  will-change: transform;
   /* Soft under wordmark, clearer in the ring */
   mask-image: radial-gradient(
     ellipse 78% 62% at 50% 48%,
@@ -1600,15 +1531,6 @@ html[data-theme="light"] .site-slime.is-active {
   .hero-wordmark__reveal {
     opacity: 1;
     transition: none;
-  }
-
-  .section-title__fill {
-    opacity: 0 !important;
-  }
-
-  .section-title.is-filling .section-title__base {
-    -webkit-mask-image: none;
-    mask-image: none;
   }
 
   .project-card:hover .project-card__media,

@@ -348,6 +348,10 @@
     if (!blobs.length || !baseText || !revealTexts.length) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let parallaxBase = 0;
+    let parallaxOil = 0;
+    let parallaxScaleBase = 1;
+    let parallaxScaleOil = 1;
 
     const blobRests = [
       { x: 0.12, y: 0.48, r: 0.2 },
@@ -372,12 +376,16 @@
     const layoutText = (w, h) => {
       const cx = w / 2;
       const cy = h / 2;
-      baseText.setAttribute("x", String(cx));
-      baseText.setAttribute("y", String(cy));
-      revealTexts.forEach((el) => {
+      const place = (el, dy, scale) => {
         el.setAttribute("x", String(cx));
         el.setAttribute("y", String(cy));
-      });
+        el.setAttribute(
+          "transform",
+          `translate(0 ${dy}) translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`
+        );
+      };
+      place(baseText, parallaxBase, parallaxScaleBase);
+      revealTexts.forEach((el) => place(el, parallaxOil, parallaxScaleOil));
     };
 
     const placeHole = (el, x, y, scale, rot) => {
@@ -403,6 +411,29 @@
     };
 
     let size = syncSvgSize();
+
+    const updateParallax = () => {
+      const fib = $(".hero-fibonacci", hero);
+      if (reduced) {
+        parallaxBase = 0;
+        parallaxOil = 0;
+        parallaxScaleBase = 1;
+        parallaxScaleOil = 1;
+        if (fib) fib.style.transform = "";
+        return;
+      }
+      // Both drift up with scroll; oil/accent leads, outline trails behind.
+      const scrolled = Math.max(0, -hero.getBoundingClientRect().top);
+      const progress = Math.min(1, scrolled / Math.max(1, size.h));
+      parallaxBase = scrolled * -0.12;
+      parallaxOil = scrolled * -0.28;
+      parallaxScaleBase = 1 - progress * 0.1;
+      parallaxScaleOil = 1 - progress * 0.16;
+      if (fib) {
+        fib.style.transform = `scale(${1 + progress * 0.14})`;
+      }
+    };
+
     new ResizeObserver(() => {
       size = syncSvgSize();
     }).observe(hero);
@@ -414,11 +445,20 @@
       const activeSpan = Math.min(size.w * 0.92, idleSpan * 1.144);
       const span = idleSpan + (activeSpan - idleSpan) * spread;
       const left = (size.w - span) / 2;
+      const cx = size.w * 0.5;
+      const cy = size.h * 0.5;
+      const s = parallaxScaleOil;
       return {
         min,
         span,
-        mapX: (nx) => left + span * nx,
-        mapY: (ny) => size.h * ny,
+        mapX: (nx) => {
+          const x = left + span * nx;
+          return cx + (x - cx) * s;
+        },
+        mapY: (ny) => {
+          const y = size.h * ny;
+          return cy + (y - cy) * s + parallaxOil;
+        },
       };
     };
 
@@ -499,6 +539,8 @@
 
     const tick = (time) => {
       const t = time * 0.001;
+      updateParallax();
+      layoutText(size.w, size.h);
       const spread = 1 - idleAmount;
       const { min, mapX, mapY } = oilLayout(spread);
 
@@ -517,7 +559,7 @@
       }
 
       const centerX = size.w * 0.5;
-      const centerY = size.h * 0.48;
+      const centerY = size.h * 0.48 * parallaxScaleOil + size.h * 0.5 * (1 - parallaxScaleOil) + parallaxOil;
 
       blobs.forEach((el, i) => {
         const rest = blobRests[i] || blobRests[0];
@@ -537,7 +579,7 @@
         blobState[i].pack += (packTarget - blobState[i].pack) * 0.08;
 
         const pulse = 1 + Math.sin(t * 0.75 + i) * (pointerInside ? 0.03 : 0.09);
-        const radius = min * rest.r * blobState[i].pack * presence * pulse;
+        const radius = min * rest.r * blobState[i].pack * presence * pulse * parallaxScaleOil;
         el.setAttribute("cx", String(blobState[i].x));
         el.setAttribute("cy", String(blobState[i].y));
         el.setAttribute("r", String(Math.max(0, radius)));
@@ -559,7 +601,7 @@
         }
         holeState[i].close += (closeTarget - holeState[i].close) * 0.09;
 
-        const scale = ((min * rest.r) / 30) * holeState[i].close * presence;
+        const scale = ((min * rest.r) / 30) * holeState[i].close * presence * parallaxScaleOil;
         placeHole(el, holeState[i].x, holeState[i].y, scale, rest.rot || 0);
       });
 
@@ -1044,12 +1086,6 @@
             0 0 1 0 0
             0 0 0 18 -8" result="goo"/>
         </filter>
-        <filter id="section-title-oil" x="-30%" y="-40%" width="160%" height="180%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="noise">
-            <animate attributeName="baseFrequency" values="0.028;0.042;0.028" dur="14s" repeatCount="indefinite"/>
-          </feTurbulence>
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
-        </filter>
       </defs>
       <g class="site-slime__mass" filter="url(#site-slime-goo)">
         <circle class="site-slime__cursor" cx="-100" cy="-100" r="0" fill="url(#site-slime-grad)"/>
@@ -1069,19 +1105,17 @@
     let pointerInside = false;
     let presence = 0;
     let binderSeq = 0;
-    /** @type {{ el: Element, body: SVGElement, clip: SVGCircleElement, clipPath: SVGClipPathElement, group: SVGGElement, amount: number, hx: number, hy: number, title: HTMLElement | null }[]} */
+    /** @type {{ el: Element, body: SVGElement, clip: SVGCircleElement, clipPath: SVGClipPathElement, group: SVGGElement, amount: number, hx: number, hy: number }[]} */
     let binders = [];
 
     const MERGE_DIST_CARD = 38;
     const MERGE_DIST_UI = 24;
-    const MERGE_DIST_UNDERLINE = 36;
     const CARD_RX = 12;
     const CARD_SELECTOR = ".project-card__media, .freebie-card";
-    const UNDERLINE_SELECTOR = ".section-title__underline";
     const FOOTER_ICON_SELECTOR = ".footer-icon";
     const SKILL_FILL_SELECTOR = ".skill__fill";
     const SLIME_TARGETS =
-      `${CARD_SELECTOR}, ${UNDERLINE_SELECTOR}, ${FOOTER_ICON_SELECTOR}, ${SKILL_FILL_SELECTOR}, .nav > a, .filter-btn, .btn, .icon-btn, .nav-toggle, .modal__close`;
+      `${CARD_SELECTOR}, ${FOOTER_ICON_SELECTOR}, ${SKILL_FILL_SELECTOR}, .nav > a, .filter-btn, .btn, .icon-btn, .nav-toggle, .modal__close`;
 
     const syncSize = () => {
       const w = Math.max(1, document.documentElement.clientWidth);
@@ -1130,9 +1164,6 @@
           amount: 0,
           hx: 0,
           hy: 0,
-          title: el.matches(UNDERLINE_SELECTOR)
-            ? el.closest(".section-title")
-            : null,
         };
       });
     };
@@ -1164,15 +1195,12 @@
           const hit = nearestOnRect(smoothX, smoothY, rect);
           const d = Math.hypot(smoothX - hit.x, smoothY - hit.y);
           const isCard = b.el.matches(CARD_SELECTOR);
-          const isUnderline = Boolean(b.title);
           const isFooterIcon = b.el.matches(FOOTER_ICON_SELECTOR);
-          const reach = isUnderline
-            ? MERGE_DIST_UNDERLINE
-            : isFooterIcon
-              ? MERGE_DIST_UI + 6
-              : isCard
-                ? MERGE_DIST_CARD
-                : MERGE_DIST_UI;
+          const reach = isFooterIcon
+            ? MERGE_DIST_UI + 6
+            : isCard
+              ? MERGE_DIST_CARD
+              : MERGE_DIST_UI;
           const target = modalOpen ? 0 : Math.max(0, 1 - d / reach) ** 2.1;
           b.amount += (target - b.amount) * 0.16;
           if (b.amount < 0.02) {
@@ -1186,22 +1214,6 @@
         }
 
         const a = b.amount;
-        if (b.title) {
-          const filling = a > 0.02;
-          b.title.classList.toggle("is-filling", filling);
-          if (filling) {
-            const titleRect = b.title.getBoundingClientRect();
-            b.title.style.setProperty("--fill-x", `${b.hx - titleRect.left}px`);
-            b.title.style.setProperty("--fill-y", `${b.hy - titleRect.top}px`);
-            b.title.style.setProperty(
-              "--fill-r",
-              `${12 + a * Math.hypot(titleRect.width, titleRect.height) * 1.05}px`
-            );
-          } else {
-            b.title.style.setProperty("--fill-r", "0px");
-          }
-        }
-
         if (a < 0.01) {
           b.body.setAttribute("width", "0");
           b.body.setAttribute("height", "0");
@@ -1210,7 +1222,6 @@
         }
 
         const isCard = b.el.matches(CARD_SELECTOR);
-        const isUnderline = Boolean(b.title);
         const isFooterIcon = b.el.matches(FOOTER_ICON_SELECTOR);
 
         if (isFooterIcon) {
@@ -1227,27 +1238,6 @@
           b.body.setAttribute("ry", String(size * 0.5));
           b.body.setAttribute("opacity", String(0.5 + a * 0.42));
           const clipR = 10 + a * size * 0.85;
-          b.clip.setAttribute("cx", String(b.hx));
-          b.clip.setAttribute("cy", String(b.hy));
-          b.clip.setAttribute("r", String(clipR));
-          return;
-        }
-
-        if (isUnderline) {
-          // Thick enough for goo blur, but keep the line reading sharp.
-          const padX = 1.5 + a * 1.5;
-          const h = 9 + a * 2.5;
-          const cy = rect.top + rect.height * 0.5;
-          const w = rect.width + padX * 2;
-          const rx = Math.min(h * 0.5, 3);
-          b.body.setAttribute("x", String(rect.left - padX));
-          b.body.setAttribute("y", String(cy - h * 0.5));
-          b.body.setAttribute("width", String(w));
-          b.body.setAttribute("height", String(h));
-          b.body.setAttribute("rx", String(rx));
-          b.body.setAttribute("ry", String(rx));
-          b.body.setAttribute("opacity", String(0.55 + a * 0.4));
-          const clipR = 14 + a * Math.hypot(w, h) * 0.95;
           b.clip.setAttribute("cx", String(b.hx));
           b.clip.setAttribute("cy", String(b.hy));
           b.clip.setAttribute("r", String(clipR));
