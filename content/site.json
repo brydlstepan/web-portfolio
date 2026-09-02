@@ -9,24 +9,22 @@
   "ai": {
     "title": "Artificial Intelligence",
     "titleEmphasis": "Intelligence",
-    "lede": "AI is everywhere — so here's how I actually use it.",
-    "text": "I use AI every day, and I also hate it — especially when it replaces creative thinking and authenticity. I put it on the boring, time-consuming work I don’t want, so I get more time for the creative stuff I’m good at. New tech is the fun part: I push AI past chatbot defaults and into the edge of realtime pipelines.",
+    "lede": "I use AI every day, and I also hate it — here's how I actually use it:",
     "items": [
       {
-        "title": "Speed the dull",
-        "text": "Automate glue, cleanup, and other chores I’d rather not do — so creative hours stay creative."
+        "title": "Draw the line",
+        "text": "Automate what can be automated, speed up what can be sped up — but draw a clear line before it spills into creativity or steers focus away."
       },
       {
         "title": "Keep the craft",
-        "text": "No outsourcing taste. If it starts standing in for thinking or authenticity, I’m out."
+        "text": "For creative work, authenticity matters most to me — and it’s something AI can’t, and shouldn’t, replace."
       },
       {
-        "title": "Ride the edge",
-        "text": "I like new tech. I wire models into tooling and Unreal workflows — not just another chat window."
+        "title": "On the edge",
+        "text": "I’m a tech enthusiast. I like pushing past what’s currently possible — peeking behind the curtain at what will come and how to utilise it."
       }
     ]
   },
-  "portrait": "assets/about/portrait.png",
   "cv": "assets/cv/Stepan-Brydl-CV.pdf",
   "skills": [
     { "id": "unreal", "name": "Unreal Engine", "level": 10 },

@@ -8,7 +8,7 @@ Personal portfolio for **brydlstepan.cz**. Static public site, managed by a priv
 
 - Present professional work on a single, well-designed page
 - Keep the site fast, static, and free to host
-- Manage content (projects, tags, freebies) without editing HTML by hand
+- Manage content (projects, tags) without editing HTML by hand
 - Keep the admin tool private — it never goes online
 - Preserve the existing visual language: black base, frosted glass, blue↔turquoise light
 
@@ -18,8 +18,7 @@ Personal portfolio for **brydlstepan.cz**. Static public site, managed by a priv
 
 | Route | Type | Purpose |
 | --- | --- | --- |
-| `/` | One-pager | Hero, Work, About, Contact |
-| `/freebies` | Page | Free downloads / resources |
+| `/` | One-pager | Hero, Work, About, AI, Contact |
 | Instagram | External | Photography |
 | GitHub | External | Code |
 | LinkedIn | External | Professional profile |
@@ -43,13 +42,11 @@ Deliberately excluded: clients section, testimonials, blog, contact form.
 ## 4. Navigation
 
 ```
-brydlstepan     Work · About · Contact · Freebies · Photography     [GitHub] [LinkedIn]
+brydlstepan     Work · About · AI · Contact     [GitHub] [LinkedIn] [Photography]
 ```
 
-- **Work / About / Contact** — scroll anchors on the one-pager
-- **Freebies** — internal page
-- **Photography** — text link, opens Instagram in a new tab
-- **GitHub / LinkedIn** — icon buttons, new tab
+- **Work / About / AI / Contact** — scroll anchors on the one-pager
+- **GitHub / LinkedIn / Photography** — icon buttons, new tab
 
 Mobile: text links collapse into a drawer; icon buttons stay visible or move into the drawer.
 
@@ -153,24 +150,6 @@ Gallery order is authored in the configurator. When a project has a video, it is
 
 Videos are hosted on YouTube or Vimeo (`provider` is `youtube` or `vimeo`). The repo stores only the video ID and a locally hosted poster frame — no video files, so the repo stays small.
 
-### `content/freebies.json`
-
-```json
-[
-  {
-    "id": "freebie-slug",
-    "title": "Freebie title",
-    "description": "What it is and who it's for.",
-    "image": "assets/freebies/freebie-slug.webp",
-    "url": "https://drive.google.com/...",
-    "published": true,
-    "order": 1
-  }
-]
-```
-
-Freebie files are hosted externally (Google Drive or similar). The repo stores only the description, preview image, and outbound link.
-
 ### `content/site.json`
 
 ```json
@@ -200,8 +179,7 @@ A small web UI that runs on `localhost` only.
 
 - Tags: create, rename, reorder, group, show/hide
 - Projects: create, edit, reorder, publish/unpublish, assign tags, order the gallery
-- Freebies: create, edit, publish/unpublish
-- Site copy: hero, about, contact, social links
+- Site copy: hero, about, AI, contact, social links
 - Images: pick a file, resize/convert to WebP, write into `assets/`
 - Build: render the static pages from the published content
 
@@ -240,7 +218,7 @@ Edit content → drafts stay in .drafts/ (gitignored)
         ↓
 Publish an item → written into content/*.json + assets/
         ↓
-Build → renders index.html and freebies.html from templates
+Build → renders index.html from templates
         ↓
 git commit + push
         ↓
@@ -351,10 +329,8 @@ A local tool that writes files and accepts uploads still deserves basic hygiene.
 
 **Fix (optional):** obfuscate lightly or accept it. Low stakes, and spam filters are decent.
 
-**8. Two pages will duplicate markup.**
-The one-pager and `/freebies` share a header and footer. Hand-maintaining both invites drift.
-
-**Fix:** the build step renders both pages from shared templates.
+**8. Duplicated markup across pages.** — *Resolved by scope*
+The site is a single page again, so there is no second copy of the header and footer to drift.
 
 ### Trade-offs accepted
 
@@ -379,7 +355,6 @@ The one-pager and `/freebies` share a header and footer. Hand-maintaining both i
 | --- | --- |
 | Configurator location | In this repo, committed for backup; drafts kept in a gitignored store |
 | Project detail | Modal with media gallery, from v1 |
-| Freebies hosting | External (Google Drive or similar); repo stores description, image, link |
 | Tone | Keep the dry humor; drop it later if it reads wrong against real work |
 | Branch | Development happens on `Dev` |
 | Role line | **Unreal Engine Dev / 3D Generalist** |
@@ -401,10 +376,9 @@ Nothing blocking. Remaining items are content: real project entries, the About t
 2. **One-pager shell** — header, sections, footer, responsive layout
 3. **Work grid + filters** — against mock content
 4. **Project modal** — gallery, keyboard navigation, hash linking
-5. **Freebies page** — same shell, list layout
-6. **Configurator** — local UI, content editing, image handling, draft store
-7. **Build step** — templates → static pages
-8. **Deploy** — verify domain, TLS mode, and Pages output
-9. **Content pass** — real projects, real copy
+5. **Configurator** — local UI, content editing, image handling, draft store
+6. **Build step** — templates → static pages
+7. **Deploy** — verify domain, TLS mode, and Pages output
+8. **Content pass** — real projects, real copy
 
 The current under-construction page stays live until step 8.

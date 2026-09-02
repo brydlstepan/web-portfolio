@@ -13,7 +13,22 @@
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+
+  // Keeps `javascript:` and `data:` out of hrefs even if content JSON is ever
+  // generated rather than hand-written.
+  function safeURL(value) {
+    if (!value) return "";
+    try {
+      const url = new URL(String(value), document.baseURI);
+      return SAFE_PROTOCOLS.has(url.protocol) ? url.href : "";
+    } catch {
+      return "";
+    }
   }
 
   function tagMap(tags) {
@@ -340,7 +355,14 @@
     host.addEventListener("pointerleave", () => {
       lastHit = null;
     });
-    window.addEventListener("resize", rebuild);
+
+    // Resampling every contour walks thousands of path points, so coalesce the
+    // burst of resize events a window drag produces.
+    let resizeTimer = 0;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(rebuild, 150);
+    });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) clearAll();
     });
@@ -377,7 +399,7 @@
 
         grid.style.setProperty("--gx", `${smoothX}px`);
         grid.style.setProperty("--gy", `${smoothY}px`);
-        grid.style.setProperty("--grid-glow", String(pointerInside ? presence * 0.45 : 0));
+        grid.style.setProperty("--grid-glow", String(pointerInside ? presence * 0.5625 : 0));
 
         if (pointerInside || presence > 0.01) raf = window.requestAnimationFrame(tick);
         else raf = 0;
@@ -480,8 +502,9 @@
 
     let size = syncSvgSize();
 
+    const fib = $(".hero-fibonacci", hero);
+
     const updateParallax = () => {
-      const fib = $(".hero-fibonacci", hero);
       if (reduced) {
         parallaxBase = 0;
         parallaxOil = 0;
@@ -632,7 +655,7 @@
       if (grid) {
         grid.style.setProperty("--gx", `${smoothX}px`);
         grid.style.setProperty("--gy", `${smoothY}px`);
-        grid.style.setProperty("--grid-glow", String(pointerInside ? presence * 0.45 : 0));
+        grid.style.setProperty("--grid-glow", String(pointerInside ? presence * 0.5625 : 0));
       }
 
       const centerX = size.w * 0.5;
@@ -682,8 +705,35 @@
         placeHole(el, holeState[i].x, holeState[i].y, scale, rest.rot || 0);
       });
 
-      requestAnimationFrame(tick);
+      raf = running ? requestAnimationFrame(tick) : 0;
     };
+
+    // The oil drifts on its own even without a pointer, so the loop can only be
+    // paused wholesale — when the hero scrolls away or the tab is backgrounded.
+    let raf = 0;
+    let onScreen = true;
+    let running = false;
+
+    const sync = () => {
+      const next = onScreen && !document.hidden;
+      if (next === running) return;
+      running = next;
+      if (running && !raf) raf = requestAnimationFrame(tick);
+      if (!running && raf) {
+        window.cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+        sync();
+      },
+      { threshold: 0 }
+    ).observe(hero);
+
+    document.addEventListener("visibilitychange", sync);
 
     const syncPointer = (e) => {
       const rect = hero.getBoundingClientRect();
@@ -695,11 +745,11 @@
     hero.addEventListener("pointerenter", syncPointer);
     hero.addEventListener("pointermove", syncPointer);
 
-    hero.addEventListener('pointerleave', () => {
+    hero.addEventListener("pointerleave", () => {
       pointerInside = false;
     });
 
-    requestAnimationFrame(tick);
+    sync();
   }
 
   function buildFilters(tags) {
@@ -764,7 +814,7 @@
       .join("");
   }
 
-  function setupFilters() {
+  function setupFilters(onFilter) {
     const root = $("#filters");
     const grid = $("#project-grid");
     const empty = $("#work-empty");
@@ -789,7 +839,87 @@
       });
 
       if (empty) empty.classList.toggle("is-visible", visible === 0);
+      onFilter?.();
     });
+  }
+
+  function setupProjectCardReveal() {
+    const grid = $("#project-grid");
+    if (!grid) return { refresh() {} };
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const cards = () => $$(".project-card", grid);
+    const revealedRows = new Set();
+
+    const rowTop = (card) => card.offsetTop;
+
+    const reveal = (card, delay = 0) => {
+      card.style.setProperty("--reveal-delay", `${delay}ms`);
+      card.classList.add("is-revealed");
+    };
+
+    const revealRow = (card, delay = 0) => {
+      const top = rowTop(card);
+      if (revealedRows.has(top)) return;
+
+      const rowCards = cards().filter(
+        (other) =>
+          !other.classList.contains("is-hidden") &&
+          Math.abs(rowTop(other) - top) <= 2
+      );
+
+      rowCards.forEach((other) => {
+        reveal(other, delay);
+        io.unobserve(other);
+      });
+
+      revealedRows.add(top);
+    };
+
+    if (reduced) {
+      cards().forEach((card) => reveal(card));
+      return { refresh() { cards().forEach((card) => reveal(card)); } };
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const batch = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => {
+            const pos = a.target.compareDocumentPosition(b.target);
+            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+            if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+            return 0;
+          });
+
+        const batchRows = [...new Set(batch.map((entry) => rowTop(entry.target)))].sort(
+          (a, b) => a - b
+        );
+
+        batch.forEach((entry) => {
+          const top = rowTop(entry.target);
+          if (revealedRows.has(top)) return;
+          const rowIndex = batchRows.indexOf(top);
+          revealRow(entry.target, rowIndex * 70);
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -4% 0px" }
+    );
+
+    const refresh = () => {
+      cards().forEach((card) => {
+        if (card.classList.contains("is-hidden")) {
+          io.unobserve(card);
+          return;
+        }
+        if (card.classList.contains("is-revealed")) return;
+        io.observe(card);
+      });
+    };
+
+    refresh();
+
+    return { refresh };
   }
 
   function videoEmbedURL(item) {
@@ -883,6 +1013,8 @@
       desc.textContent = project.description || "";
 
       links.innerHTML = (project.links || [])
+        .map((l) => ({ label: l.label, url: safeURL(l.url) }))
+        .filter((l) => l.url)
         .map(
           (l) =>
             `<a class="btn" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer">↳ ${escapeHTML(l.label)}</a>`
@@ -899,6 +1031,7 @@
 
       modal.classList.add("is-open");
       modal.setAttribute("aria-hidden", "false");
+      modal.removeAttribute("inert");
       document.body.classList.add("is-locked");
       history.replaceState(null, "", `#${project.id}`);
       closeBtn.focus();
@@ -908,6 +1041,7 @@
       if (!modal.classList.contains("is-open")) return;
       modal.classList.remove("is-open");
       modal.setAttribute("aria-hidden", "true");
+      modal.setAttribute("inert", "");
       document.body.classList.remove("is-locked");
       stage.innerHTML = "";
       if (location.hash) history.replaceState(null, "", location.pathname + location.search);
@@ -953,6 +1087,25 @@
     return { open, close };
   }
 
+  function renderAbout(text, photographyUrl) {
+    let html = escapeHTML(text || "");
+    const emphasis = "make pretty things that run smooth";
+
+    if (html.includes(emphasis)) {
+      html = html.replace(emphasis, `<strong class="about-emphasis">${emphasis}</strong>`);
+    }
+
+    const url = safeURL(photographyUrl);
+    if (url && html.includes("photos")) {
+      html = html.replace(
+        "photos",
+        `<a class="about-link" href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">photos</a>`
+      );
+    }
+
+    return html;
+  }
+
   function fillSiteCopy(site) {
     const brandEls = $$("[data-bind='brand']");
     brandEls.forEach((el) => {
@@ -968,7 +1121,9 @@
     setText("role", site.role);
     setText("hero-title", site.hero?.title);
     setText("hero-text", site.hero?.text);
-    setText("about", site.about);
+    $$("[data-bind='about']").forEach((el) => {
+      el.innerHTML = renderAbout(site.about, site.social?.photography);
+    });
     const aiTitle = site.ai?.title || "AI";
     const aiEmphasis = site.ai?.titleEmphasis;
     $$(`[data-bind='ai-title']`).forEach((el) => {
@@ -981,17 +1136,7 @@
       }
     });
     setText("ai-lede", site.ai?.lede);
-    setText("ai-text", site.ai?.text);
     renderAiItems(site.ai?.items || []);
-
-    $$("[data-bind='portrait']").forEach((el) => {
-      if (site.portrait) {
-        el.src = site.portrait;
-        el.hidden = false;
-      } else {
-        el.hidden = true;
-      }
-    });
 
     $$("[data-bind='email']").forEach((el) => {
       const email = site.contact?.email || "";
@@ -1015,7 +1160,8 @@
       artstation: site.social?.artstation,
     };
 
-    Object.entries(map).forEach(([key, url]) => {
+    Object.entries(map).forEach(([key, value]) => {
+      const url = safeURL(value);
       $$(`[data-social='${key}']`).forEach((el) => {
         if (url) {
           el.href = url;
@@ -1034,13 +1180,20 @@
     "ai-dev": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>',
     "ai-content": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="m18 14 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/></svg>',
     blender: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(120 12 12)"/></svg>',
-    substance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 17c4-8 6-11 8-11s2 5 8 11"/><path d="M8 17h8"/><circle cx="12" cy="7" r="2"/></svg>',
     "substance-painter": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 17c4-8 6-11 8-11s2 5 8 11"/><path d="M8 17h8"/><circle cx="12" cy="7" r="2"/></svg>',
     "substance-designer": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 16l3-8 3 5 2-3"/></svg>',
     git: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M6 8.2v7.6M8.2 18h7.6M7.6 7.6 16 16"/></svg>',
     photoshop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 16V8h2.4c1.6 0 2.6.9 2.6 2.3S12 12.6 10.4 12.6H8"/></svg>',
     premiere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9z"/></svg>',
     lightroom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.05 7.05l1.4 1.4M15.55 15.55l1.4 1.4M16.95 7.05l-1.4 1.4M8.45 15.55l-1.4 1.4"/></svg>',
+    "3dsmax": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3 3.5 7.75v8.5L12 21l8.5-4.75v-8.5L12 3z"/><path d="M12 12 3.5 7.75M12 12l8.5-4.25M12 12v9"/><circle cx="12" cy="12" r="1.6"/></svg>',
+    maya: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 5v9a8 8 0 0 0 16 0V5"/><path d="M8 5v9a4 4 0 0 0 8 0V5"/></svg>',
+    cinema4d: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8.5"/><path d="M15.2 9.2a4 4 0 1 0 0 5.6"/></svg>',
+    unity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3.2 20 7.6v8.8L12 20.8 4 16.4V7.6l8-4.4z"/><path d="M12 8.1 16.2 15H7.8L12 8.1z"/></svg>',
+    figma: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 3h3v6H9a3 3 0 0 1 0-6zM12 3h3a3 3 0 0 1 0 6h-3V3zM9 9h3v6H9a3 3 0 0 1 0-6zM9 15h3v3a3 3 0 1 1-3-3z"/><circle cx="15" cy="12" r="3"/></svg>',
+    docker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 12h13v3.2A4.8 4.8 0 0 1 12.2 20H9a5 5 0 0 1-5-5v-3z"/><path d="M7 12V9.5M10 12V9.5M13 12V9.5M10 9.5V7M17 12.4c1.6-.9 2.6-.6 3 .1"/></svg>',
+    indesign: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8.6 8v8"/><path d="M15.4 8v8h-1.7a2.6 2.6 0 0 1 0-5.2h1.7"/></svg>',
+    "html-css": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m8.5 8.5-4 3.5 4 3.5M15.5 8.5l4 3.5-4 3.5M13.4 5.5l-2.8 13"/></svg>',
   };
 
   function skillIcon(id) {
@@ -1176,6 +1329,9 @@
     const SLIME_TARGETS =
       `${CARD_SELECTOR}, ${FOOTER_ICON_SELECTOR}, ${SKILL_FILL_SELECTOR}, .nav > a, .filter-btn, .btn, .icon-btn, .nav-toggle, .modal__close`;
 
+    let raf = 0;
+    let rectsDirty = true;
+
     const syncSize = () => {
       const w = Math.max(1, document.documentElement.clientWidth);
       const h = Math.max(1, document.documentElement.clientHeight);
@@ -1184,10 +1340,8 @@
       svg.setAttribute("height", String(h));
     };
 
-    const readCornerRadius = (el, box) => {
-      const px = parseFloat(getComputedStyle(el).borderRadius) || CARD_RX;
-      return Math.min(px, box.width * 0.5, box.height * 0.5);
-    };
+    const cornerRadius = (b, box) =>
+      Math.min(b.radius, box.width * 0.5, box.height * 0.5);
 
     const makeBinder = () => {
       const id = `site-slime-clip-${binderSeq++}`;
@@ -1223,8 +1377,23 @@
           amount: 0,
           hx: 0,
           hy: 0,
+          rect: null,
+          prevTop: 0,
+          prevLeft: 0,
+          // Read once here rather than per frame; it never changes at runtime.
+          radius: parseFloat(getComputedStyle(el).borderRadius) || CARD_RX,
         };
       });
+      rectsDirty = true;
+    };
+
+    // Rects are viewport-relative, so they only go stale on scroll, resize, or
+    // layout changes triggered by a click (filtering, opening the modal).
+    const measure = () => {
+      binders.forEach((b) => {
+        b.rect = b.el.getBoundingClientRect();
+      });
+      rectsDirty = false;
     };
 
     const nearestOnRect = (px, py, rect) => ({
@@ -1233,22 +1402,45 @@
     });
 
     const tick = () => {
-      syncSize();
+      if (rectsDirty) measure();
+
       const modalOpen = modal?.classList.contains("is-open");
-      presence += ((pointerInside && !modalOpen ? 1 : 0) - presence) * 0.12;
+      const presenceTarget = pointerInside && !modalOpen ? 1 : 0;
+      const settling =
+        Math.abs(pointerX - smoothX) > 0.05 ||
+        Math.abs(pointerY - smoothY) > 0.05 ||
+        Math.abs(presenceTarget - presence) > 0.004;
+
+      presence += (presenceTarget - presence) * 0.12;
       smoothX += (pointerX - smoothX) * 0.18;
       smoothY += (pointerY - smoothY) * 0.18;
 
       let nearBoost = 0;
+      let maxDelta = 0;
 
       binders.forEach((b) => {
-        const rect = b.el.getBoundingClientRect();
+        // Hover transforms move an element without dirtying the cache, so read
+        // live geometry for the handful the goo is currently wrapped around and
+        // keep the loop awake for as long as that geometry is still moving.
+        const live = b.amount > 0.004;
+        const rect = live ? b.el.getBoundingClientRect() : b.rect;
+        if (live) {
+          maxDelta = Math.max(
+            maxDelta,
+            Math.abs(rect.top - b.prevTop) * 0.01,
+            Math.abs(rect.left - b.prevLeft) * 0.01
+          );
+        }
+        b.prevTop = rect.top;
+        b.prevLeft = rect.left;
+
         if (
           rect.width < 4 ||
           rect.height < 2 ||
           b.el.classList.contains("is-hidden") ||
           b.el.closest(".project-card")?.classList.contains("is-hidden")
         ) {
+          maxDelta = Math.max(maxDelta, Math.abs(b.amount));
           b.amount += (0 - b.amount) * 0.2;
         } else {
           const hit = nearestOnRect(smoothX, smoothY, rect);
@@ -1261,11 +1453,17 @@
               ? MERGE_DIST_CARD
               : MERGE_DIST_UI;
           const target = modalOpen ? 0 : Math.max(0, 1 - d / reach) ** 2.1;
+          maxDelta = Math.max(maxDelta, Math.abs(target - b.amount));
           b.amount += (target - b.amount) * 0.16;
           if (b.amount < 0.02) {
             b.hx = hit.x;
             b.hy = hit.y;
           } else {
+            maxDelta = Math.max(
+              maxDelta,
+              Math.abs(hit.x - b.hx) * 0.01,
+              Math.abs(hit.y - b.hy) * 0.01
+            );
             b.hx += (hit.x - b.hx) * 0.22;
             b.hy += (hit.y - b.hy) * 0.22;
           }
@@ -1311,7 +1509,7 @@
             : 1.2 + a * 1.4;
         const cornerRx = isSkillFill
           ? Math.min((rect.height + pad * 2) * 0.5, 8)
-          : readCornerRadius(b.el, rect);
+          : cornerRadius(b, rect);
         // Cards keep element radius; UI gets concentric merge corners.
         const outerRx = Math.min(
           cornerRx + (isCard || isSkillFill ? 0 : pad),
@@ -1344,7 +1542,23 @@
       cursorEl.setAttribute("opacity", String(0.65 + presence * 0.35));
 
       svg.classList.toggle("is-active", presence > 0.04);
-      requestAnimationFrame(tick);
+
+      // Idle once every value has converged; a pointer move, scroll, or layout
+      // change wakes the loop again.
+      if (document.hidden || (!settling && maxDelta < 0.004)) {
+        raf = 0;
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    const wake = () => {
+      if (!raf && !document.hidden) raf = requestAnimationFrame(tick);
+    };
+
+    const markRectsDirty = () => {
+      rectsDirty = true;
+      wake();
     };
 
     window.addEventListener(
@@ -1353,27 +1567,51 @@
         pointerX = e.clientX;
         pointerY = e.clientY;
         pointerInside = true;
+        wake();
       },
       { passive: true }
     );
 
     window.addEventListener("pointerleave", () => {
       pointerInside = false;
+      wake();
     });
 
     document.documentElement.addEventListener("mouseleave", () => {
       pointerInside = false;
+      wake();
+    });
+
+    window.addEventListener("scroll", markRectsDirty, { passive: true });
+    window.addEventListener("resize", () => {
+      syncSize();
+      markRectsDirty();
+    });
+    // Filtering and opening the modal reflow the targets the goo binds to.
+    document.addEventListener("click", markRectsDirty, true);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        window.cancelAnimationFrame(raf);
+        raf = 0;
+      } else {
+        markRectsDirty();
+      }
     });
 
     refresh();
     syncSize();
-    window.addEventListener("resize", syncSize);
-    requestAnimationFrame(tick);
+    wake();
 
-    return { refresh };
+    return {
+      refresh() {
+        refresh();
+        wake();
+      },
+    };
   }
 
-  async function initHome(slime) {
+  async function init(slime) {
     const [site, tags, projects] = await Promise.all([
       loadJSON("content/site.json"),
       loadJSON("content/tags.json"),
@@ -1384,7 +1622,8 @@
     fillSiteCopy(site);
     buildFilters(tags);
     buildProjects(projects, tagsById);
-    setupFilters();
+    const projectReveal = setupProjectCardReveal();
+    setupFilters(projectReveal.refresh);
     setupHeroWordmark();
     setupHeroFibonacciStrings();
     setupSectionHeadGrids();
@@ -1410,8 +1649,6 @@
   document.addEventListener("DOMContentLoaded", () => {
     setupNav();
     setupTheme();
-    const slime = setupSiteSlime();
-    const page = document.body.dataset.page;
-    if (page === "home") initHome(slime).catch(console.error);
+    init(setupSiteSlime()).catch(console.error);
   });
 })();

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Freebie placeholder">
-  <rect width="800" height="500" fill="#121218"/>
-  <rect x="260" y="120" width="280" height="200" rx="12" fill="#1c1c28" stroke="#3a4a8a" stroke-width="2"/>
-  <rect x="300" y="160" width="200" height="16" fill="#3a4a8a" opacity="0.6"/>
-  <rect x="300" y="200" width="160" height="10" fill="#333"/>
-  <rect x="300" y="230" width="120" height="10" fill="#333"/>
-  <text x="40" y="460" fill="#8890b0" font-family="system-ui,sans-serif" font-size="28" letter-spacing="4">MATERIAL PACK</text>
-</svg>

@@ -1,4 +1,2 @@
 User-agent: *
-Disallow: /configurator/
 Disallow: /plan.md
-Disallow: /.drafts/

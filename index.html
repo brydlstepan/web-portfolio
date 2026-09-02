@@ -231,20 +231,9 @@
           <h2>Hi, I'm Stepan.</h2>
           <p class="section__lede" data-bind="about"></p>
         </div>
-        <div class="about-layout">
-          <div class="about-portrait">
-            <img
-              data-bind="portrait"
-              src="assets/about/portrait.png"
-              alt="Portrait of brydlstepan"
-              width="480"
-              height="480"
-            />
-          </div>
-          <div class="skills">
-            <h3 class="skills__title">Skills</h3>
-            <div class="skills-list" id="skills-list"></div>
-          </div>
+        <div class="skills">
+          <h3 class="skills__title">Skills</h3>
+          <div class="skills-list" id="skills-list"></div>
         </div>
       </div>
     </section>
@@ -255,7 +244,6 @@
           <h2 data-bind="ai-title">AI</h2>
           <p class="section__lede" data-bind="ai-lede"></p>
         </div>
-        <p class="prose ai-copy" data-bind="ai-text"></p>
         <div class="ai-list" id="ai-list"></div>
       </div>
     </section>
@@ -295,7 +283,7 @@
     </section>
   </main>
 
-  <div class="modal" id="project-modal" aria-hidden="true">
+  <div class="modal" id="project-modal" aria-hidden="true" inert>
     <div class="modal__backdrop"></div>
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
       <button class="modal__close" type="button" aria-label="Close project">
