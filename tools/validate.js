@@ -62,9 +62,6 @@ function validate() {
         errors.push(`${s}: ai.items[${i}] needs title and text`);
       }
     }
-    if (site.cv && !fs.existsSync(path.join(ROOT, site.cv))) {
-      warnings.push(`${s}: cv file not found: ${site.cv}`);
-    }
   }
 
   // --- tags.json

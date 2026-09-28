@@ -36,11 +36,11 @@ Non-public routes:
 
 ## 3. One-pager sections
 
-1. **Hero** — brand, role line, short intro, CTA into Work
+1. **Hero** — "PORTFOLIO" wordmark with a liquid reveal, Fibonacci line drawing, scroll cue into Work
 2. **Work** — filterable project grid (the core of the page)
-3. **About** — short professional bio
-4. **Contact** — email, optional LinkedIn
-5. **Footer** — copyright, email
+3. **About** — short bio and skills with level meters
+4. **AI** — how I use AI: a lede and three short points
+5. **Contact** — email, social icons, copyright (the footer is merged in)
 
 Deliberately excluded: clients section, testimonials, blog, contact form.
 
@@ -104,10 +104,9 @@ Tags are free-form and created in the admin. A project can carry several, and th
 [
   { "id": "3d", "label": "3D", "group": "discipline", "order": 1, "visible": true },
   { "id": "unreal", "label": "Unreal Engine", "group": "discipline", "order": 2, "visible": true },
-  { "id": "graphics", "label": "Graphics", "group": "discipline", "order": 3, "visible": true },
-  { "id": "ar-vr", "label": "AR/VR", "group": "discipline", "order": 4, "visible": true },
-  { "id": "visualization", "label": "Visualization", "group": "discipline", "order": 5, "visible": true },
-  { "id": "web", "label": "Web", "group": "discipline", "order": 6, "visible": true },
+  { "id": "ar-vr", "label": "AR/VR", "group": "discipline", "order": 3, "visible": true },
+  { "id": "visualization", "label": "Visualization", "group": "discipline", "order": 4, "visible": true },
+  { "id": "web", "label": "Web", "group": "discipline", "order": 5, "visible": true },
   { "id": "large", "label": "Large project", "group": "scale", "order": 7, "visible": true },
   { "id": "medium", "label": "Medium project", "group": "scale", "order": 8, "visible": true }
 ]
@@ -146,7 +145,6 @@ Tags are free-form and created in the admin. A project can carry several, and th
       }
     ],
     "links": [{ "label": "Live", "url": "https://..." }],
-    "featured": false,
     "order": 1,
     "published": true
   }
@@ -162,19 +160,28 @@ Videos are hosted on YouTube or Vimeo (`provider` is `youtube` or `vimeo`). The 
 ```json
 {
   "brand": "brydlstepan",
-  "role": "Unreal Engine Dev / 3D Generalist",
-  "hero": { "title": "…", "text": "…" },
   "about": "…",
+  "ai": {
+    "title": "Artificial Intelligence",
+    "titleEmphasis": "Intelligence",
+    "lede": "…",
+    "items": [{ "title": "…", "text": "…" }]
+  },
+  "skills": [{ "id": "unreal", "name": "Unreal Engine", "level": 10 }],
   "contact": { "email": "brydlstepan@gmail.com" },
   "social": {
     "github": "https://github.com/brydlstepan",
     "linkedin": "https://…",
-    "instagram": "https://…"
+    "instagram": "https://…",
+    "photography": "https://…",
+    "artstation": "https://…"
   }
 }
 ```
 
 Tags are referenced by `id`, so renaming a label never breaks the projects using it.
+
+`skills[].level` is 0–10. `ai.titleEmphasis` is the part of the title set in italics. A social link left empty hides its icon. `tools/validate.js` enforces these shapes before every build.
 
 ---
 
@@ -297,7 +304,7 @@ edit in admin → Save            → commit to Dev (no deploy)
 
 - **Projects** — list, create, edit, reorder, show/hide, assign tags, order the gallery (video first)
 - **Tags** — create, rename, group, reorder, show/hide
-- **Site** — hero, about, AI, contact, social links
+- **Site** — about, skills, AI, contact, social links
 - **Images** — resized in the browser (max 2000px), converted to WebP, thumbnail generated
 - **Saving** — all files of one save go into a single commit via the Git Data API (blobs → tree → commit → update ref)
 
@@ -309,7 +316,7 @@ edit in admin → Save            → commit to Dev (no deploy)
 
 ### Security layers
 
-1. **Admin password** — HTTP Basic Auth on `/admin/*` in a Pages Function (`functions/admin/_middleware.js`); the admin page does not load before it passes. Password in the Pages project's encrypted variables (`ADMIN_PASSWORD`), compared in constant time. A Cloudflare rate-limiting rule on `/admin/*` (one is free) slows guessing
+1. **Admin password** — HTTP Basic Auth on `/admin/*` in the Pages Function `functions/_middleware.js`; the admin page does not load before it passes. `ADMIN_PASSWORD` is a GitHub Secret; only its hash is bundled, compared in constant time. A Cloudflare rate-limiting rule on `/admin/*` (one is free) slows guessing
 2. **GitHub sign-in** plus the `brydlstepan` account check
 3. **GitHub permissions** — the final authority on who can write
 4. **Narrow token** — one repo, contents and PRs only, 8-hour lifetime
@@ -441,9 +448,9 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 | Release | PR `Dev` → `main`, merge commit, `[build]` title |
 | Project detail | Modal with media gallery, from v1 |
 | Tone | Keep the dry humor; drop it later if it reads wrong against real work |
-| Role line | **Unreal Engine Dev / 3D Generalist** |
+| Role line | **Unreal Engine Dev / 3D Generalist** — in the page's meta description; the hero is the wordmark |
 | Video hosting | YouTube or Vimeo embeds, loaded on click behind a poster |
-| Tags | 3D, Unreal Engine, Graphics, AR/VR, Visualization, Web, Large project, Medium project |
+| Tags | 3D, Unreal Engine, AR/VR, Visualization, Web, Large project, Medium project |
 | Tag model | Free-form, multiple per project, optional `group` for filter-bar ordering |
 | Filtering | Single-select in v1; multi-select possible later |
 | Analytics | Cloudflare Web Analytics |
@@ -459,13 +466,13 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 
 ## 15. Build order
 
-1. **Content schema** — finalize the JSON shapes above, add a validator
-2. **One-pager shell** — header, sections, footer, responsive layout
-3. **Work grid + filters** — against mock content
-4. **Project modal** — gallery, keyboard navigation, hash linking
-5. **Build script** — templates → static `index.html`
-6. **Cloudflare Pages** — create the Direct Upload project, API token, deploy workflow with `[build]` gating
-7. **Environments** — custom domains for production and dev, `_headers`, `noindex` on dev
+1. ✅ **Content schema** — JSON shapes above, `tools/validate.js`
+2. ✅ **One-pager shell** — header, sections, responsive layout
+3. ✅ **Work grid + filters**
+4. ✅ **Project modal** — gallery, keyboard navigation, hash linking
+5. ✅ **Build script** — `tools/build.js`, shared renderers in `js/render.js`
+6. ✅ **Cloudflare Pages** — Direct Upload project `web-portfolio`, API token, deploy workflow with `[build]` gating
+7. **Environments** — ✅ dev.brydlstepan.cz, `_headers`, `noindex`, password gate on dev; ⬜ production custom domain
 8. **Switch over** — disable GitHub Pages, remove `CNAME` and `.nojekyll` if unneeded, verify TLS
 9. **GitHub App + sign-in function** — `/auth/login`, `/auth/callback`
 10. **Admin: shell** — password middleware on `/admin/*`, sign-in, account check, CSP

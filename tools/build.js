@@ -29,14 +29,14 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // (e.g. 'id="filters"'). Targets are leaf elements in the template, so the
 // first closing tag of the same name ends them. Throws if nothing matches, so
 // a template change cannot silently drop content.
-function fillInner(html, attr, inner, { required = true } = {}) {
+function fillInner(html, attr, inner) {
   const re = new RegExp(`(<(\\w+)\\b[^>]*\\b${escapeRe(attr)}[^>]*>)[\\s\\S]*?(</\\2>)`, "g");
   let count = 0;
   const out = html.replace(re, (_, open, _tag, close) => {
     count += 1;
     return open + inner + close;
   });
-  if (required && !count) throw new Error(`template has no element with ${attr}`);
+  if (!count) throw new Error(`template has no element with ${attr}`);
   return out;
 }
 
@@ -73,10 +73,6 @@ function render(template, { site, tags, projects }) {
   html = fillInner(html, 'data-bind="ai-title"', R.renderAiTitle(site.ai?.title, site.ai?.titleEmphasis));
   html = fillInner(html, 'data-bind="ai-lede"', e(site.ai?.lede || ""));
   html = fillInner(html, 'data-bind="year"', String(new Date().getFullYear()));
-  for (const key of ["role", "hero-title", "hero-text"]) {
-    const value = key === "role" ? site.role : site.hero?.[key.slice(5)];
-    html = fillInner(html, `data-bind="${key}"`, e(value || ""), { required: false });
-  }
 
   const email = site.contact?.email || "";
   html = fillInner(html, 'data-bind="email"', e(email));
@@ -186,7 +182,7 @@ function main() {
   for (const dir of COPY) {
     fs.cpSync(path.join(ROOT, dir), path.join(OUT, dir), {
       recursive: true,
-      filter: (src) => !/(^|[\\/])(README\.txt|\.DS_Store|Thumbs\.db)$/.test(src),
+      filter: (src) => !/(^|[\\/])(\.DS_Store|Thumbs\.db)$/.test(src),
     });
   }
   fs.writeFileSync(path.join(OUT, "index.html"), html);

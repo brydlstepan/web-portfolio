@@ -1,5 +1,3 @@
-.drafts/
-configurator/.local/
 node_modules/
 *.log
 .DS_Store

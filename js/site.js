@@ -1017,9 +1017,6 @@
       });
     };
 
-    setText("role", site.role);
-    setText("hero-title", site.hero?.title);
-    setText("hero-text", site.hero?.text);
     $$("[data-bind='about']").forEach((el) => {
       el.innerHTML = renderAbout(site.about, site.social?.photography);
     });

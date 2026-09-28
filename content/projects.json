@@ -17,7 +17,6 @@
       }
     ],
     "links": [],
-    "featured": true,
     "order": 1,
     "published": true
   },
@@ -39,7 +38,6 @@
       }
     ],
     "links": [],
-    "featured": true,
     "order": 2,
     "published": true
   },
@@ -61,7 +59,6 @@
       }
     ],
     "links": [],
-    "featured": false,
     "order": 3,
     "published": true
   },
@@ -83,7 +80,6 @@
       }
     ],
     "links": [],
-    "featured": false,
     "order": 4,
     "published": true
   },
@@ -105,7 +101,6 @@
       }
     ],
     "links": [],
-    "featured": false,
     "order": 5,
     "published": true
   },
@@ -127,7 +122,6 @@
       }
     ],
     "links": [],
-    "featured": false,
     "order": 6,
     "published": true
   },
@@ -135,8 +129,8 @@
     "id": "portfolio-shell",
     "title": "This Portfolio",
     "tags": ["web", "medium"],
-    "summary": "The site you're looking at — static, tagged, and still under construction.",
-    "description": "A black-and-white one-pager with frosted glass, tag filters, and a local configurator in the works. Built to stay free to host and easy to update without a CMS.",
+    "summary": "The site you're looking at — static, tagged, and pre-rendered.",
+    "description": "A black-and-white one-pager with frosted glass and tag filters, pre-rendered at build time and deployed through GitHub Actions. Free to host, previewed on its own dev environment, and edited through a small admin of its own rather than a third-party CMS.",
     "year": 2026,
     "role": "Design, front-end",
     "tools": ["HTML", "CSS", "JavaScript"],
@@ -151,7 +145,6 @@
     "links": [
       { "label": "GitHub", "url": "https://github.com/brydlstepan/web-portfolio" }
     ],
-    "featured": false,
     "order": 7,
     "published": true
   }

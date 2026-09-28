@@ -1,10 +1,5 @@
 {
   "brand": "brydlstepan",
-  "role": "Unreal Engine Dev / 3D Generalist",
-  "hero": {
-    "title": "Realtime worlds, still frames, and the odd website.",
-    "text": "I build environments, systems, and visuals in Unreal — and whatever else the brief needs. Spare time is theoretical; the work is not."
-  },
   "about": "I'm a Unreal Engine developer and 3D generalist. I like to make pretty things that run smooth. I'm mostly interested in realtime visualization, VR and technical stuff. I also dabble in graphics and web, and in my free time I like to take photos on my trips.",
   "ai": {
     "title": "Artificial Intelligence",
@@ -25,7 +20,6 @@
       }
     ]
   },
-  "cv": "assets/cv/Stepan-Brydl-CV.pdf",
   "skills": [
     { "id": "unreal", "name": "Unreal Engine", "level": 10 },
     { "id": "3dsmax", "name": "Autodesk 3ds Max", "level": 10 },
