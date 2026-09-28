@@ -294,7 +294,8 @@ edit in admin → Save            → commit to Dev (no deploy)
 - **Pages Function** `functions/auth/`
   - `/auth/login` — redirects to GitHub with a random `state` stored in a short-lived httpOnly cookie
   - `/auth/callback` — checks `state`, exchanges the code for a token with the client secret, redirects to `/admin/#token=…` (fragment, never sent to a server)
-  - Client ID and secret live in the Pages project's encrypted environment variables; nothing is stored
+  - `AUTH_CLIENT_ID` and `AUTH_CLIENT_SECRET` are GitHub Secrets; the build writes them into `.generated/auth-config.js` (gitignored), bundled into the function and never into `dist/`. Nothing is stored at runtime
+  - Callback URLs registered on the GitHub App: `https://brydlstepan.cz/auth/callback` and `https://dev.brydlstepan.cz/auth/callback`; sign-in on `*.pages.dev` addresses is not supported
 - **Admin**
   - Reads the token from the fragment, clears the URL, keeps it in `sessionStorage` only
   - Calls `GET /user` and rejects any account other than `brydlstepan`
@@ -305,12 +306,15 @@ edit in admin → Save            → commit to Dev (no deploy)
 - **Projects** — list, create, edit, reorder, show/hide, assign tags, order the gallery (video first)
 - **Tags** — create, rename, group, reorder, show/hide
 - **Site** — about, skills, AI, contact, social links
-- **Images** — resized in the browser (max 2000px), converted to WebP, thumbnail generated
+- **Images** — resized in the browser (cover and poster max 1600px, gallery max 2000px), converted to WebP at 85%, stored as `assets/projects/<id>/<kind>-<random>.webp`. Images the admin created are deleted from the repo when nothing references them any more; other files (e.g. placeholders) are never deleted
 - **Saving** — all files of one save go into a single commit via the Git Data API (blobs → tree → commit → update ref)
 
 ### Code
 
 - `admin/` — plain HTML, CSS, JS written for this site; no npm packages, no CDN
+- Content rules are shared with the build (`js/validate-content.js`), so the admin refuses to save anything the build would reject
+- Save refuses if a content file changed on GitHub since the admin loaded it (reload to continue)
+- A project's id is editable only until its first save — it is part of shared links
 - All user text inserted with `textContent`, never `innerHTML`
 - Write allowlist enforced in the admin: `content/*.json` and `assets/projects/**` only; any other path is refused
 
@@ -405,7 +409,7 @@ Accepted — drafts do not need to be secret, and a public repo keeps branch pro
 
 **7. Image weight in git.**
 Git stores every version forever; the repo grows and never shrinks.
-**Fix:** the admin converts to WebP, caps dimensions at 2000px, and generates thumbnails. Cloudflare Pages limits (20,000 files, 25 MiB per file) are far away. Revisit external asset hosting only if the repo approaches a few hundred MB.
+**Fix:** the admin converts to WebP and caps dimensions (1600px cover, 2000px gallery). Cloudflare Pages limits (20,000 files, 25 MiB per file) are far away. Revisit external asset hosting only if the repo approaches a few hundred MB.
 
 **8. Cloudflare proxy TLS.**
 Currently **Full** (automatic mode). The GitHub Pages origin has no valid certificate for brydlstepan.cz (checked 2026-09-28: `SEC_E_WRONG_PRINCIPAL`), so **Full (strict)** would break the current site.
@@ -474,11 +478,11 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 6. ✅ **Cloudflare Pages** — Direct Upload project `web-portfolio`, API token, deploy workflow with `[build]` gating
 7. **Environments** — ✅ dev.brydlstepan.cz, `_headers`, `noindex`, password gate on dev; ⬜ production custom domain
 8. **Switch over** — disable GitHub Pages, remove `CNAME` and `.nojekyll` if unneeded, verify TLS
-9. **GitHub App + sign-in function** — `/auth/login`, `/auth/callback`
-10. **Admin: shell** — password middleware on `/admin/*`, sign-in, account check, CSP
-11. **Admin: editors** — Projects, then Tags and Site
-12. **Admin: images** — resize, WebP, thumbnails, single-commit saves
-13. **Admin: Preview / Publish** — `[build]` commits, PR and merge, `Dev` vs `main` status
+9. ✅ **Sign-in functions** — `/auth/login`, `/auth/callback` (⬜ GitHub App itself: manual step)
+10. ✅ **Admin: shell** — password middleware on `/admin/*`, sign-in, account check, CSP
+11. ✅ **Admin: editors** — Projects, Tags, Site
+12. ✅ **Admin: images** — resize, WebP, single-commit saves, cleanup of unused images
+13. ✅ **Admin: Preview / Publish** — `[build]` commits, PR and merge, `Dev` vs `main` status
 14. **Hardening** — branch protection on `main`, README deployment section
 15. **Content pass** — real projects, real copy
 
@@ -493,6 +497,6 @@ The current under-construction page stays live until step 15.
 | Add `PREVIEW_PASSWORD`, `ADMIN_PASSWORD` secrets | GitHub → Settings → Environments |
 | Add `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` secrets | GitHub → Settings → Environments |
 | Create and install the GitHub App, generate client secret | GitHub → Settings → Developer settings |
-| Put the client ID and secret into the Pages project | Cloudflare dashboard |
+| Add `AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET` secrets | GitHub → Settings → Environments |
 | Disable GitHub Pages | GitHub → Settings → Pages |
 | Branch protection on `main` | GitHub → Settings → Branches |

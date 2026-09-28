@@ -35,6 +35,9 @@ jobs:
           # Only their hashes reach the deployed password gate (functions/_middleware.js).
           PREVIEW_PASSWORD: ${{ secrets.PREVIEW_PASSWORD }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          # GitHub App for admin sign-in (functions/auth/*).
+          AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID || vars.AUTH_CLIENT_ID }}
+          AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
         run: node tools/build.js
 
       - name: Check that secrets are configured

@@ -14,6 +14,20 @@ import { PREVIEW_PASSWORD_SHA256, ADMIN_PASSWORD_SHA256 } from "../.generated/ga
 
 const PRODUCTION_HOSTS = new Set(["brydlstepan.cz", "www.brydlstepan.cz"]);
 
+// The admin runs only its own scripts and talks only to GitHub's API. Images
+// come from the site, from GitHub (files on the Dev branch that are not
+// deployed yet) and from local blobs (uploads before they are saved).
+const ADMIN_CSP = [
+  "default-src 'none'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "img-src 'self' blob: data: https://raw.githubusercontent.com",
+  "connect-src 'self' https://api.github.com",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'none'",
+].join("; ");
+
 async function sha256Hex(value) {
   const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
   return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -76,5 +90,14 @@ export async function onRequest({ request, next }) {
   const response = await next();
   const gated = new Response(response.body, response);
   gated.headers.set("Cache-Control", "private, no-store");
+  gated.headers.set("X-Robots-Tag", "noindex, nofollow");
+  gated.headers.set("X-Content-Type-Options", "nosniff");
+  gated.headers.set("X-Frame-Options", "DENY");
+  if (isAdmin) {
+    gated.headers.set("Content-Security-Policy", ADMIN_CSP);
+    gated.headers.set("Referrer-Policy", "no-referrer");
+  } else {
+    gated.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  }
   return gated;
 }

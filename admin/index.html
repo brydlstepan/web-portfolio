@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin — brydlstepan</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="bar__brand">brydlstepan <span>admin</span></div>
+    <div class="bar__status" id="status" role="status"></div>
+    <div class="bar__actions" id="actions" hidden>
+      <button type="button" class="btn btn--primary" id="btn-save" disabled>Save</button>
+      <button type="button" class="btn" id="btn-preview">Preview on dev</button>
+      <button type="button" class="btn" id="btn-publish">Publish to live</button>
+      <span class="bar__user" id="user"></span>
+      <button type="button" class="btn btn--ghost" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="signin" id="signin" hidden>
+      <h1>Sign in</h1>
+      <p>Edits are saved as commits to the <code>Dev</code> branch of <code>brydlstepan/web-portfolio</code>.</p>
+      <a class="btn btn--primary" href="/auth/login">Sign in with GitHub</a>
+      <p class="error" id="signin-error" role="alert"></p>
+    </section>
+
+    <section class="editor" id="editor" hidden>
+      <nav class="tabs" role="tablist">
+        <button type="button" class="tab" role="tab" data-tab="projects">Projects</button>
+        <button type="button" class="tab" role="tab" data-tab="tags">Tags</button>
+        <button type="button" class="tab" role="tab" data-tab="site">Site</button>
+      </nav>
+      <div class="problems" id="problems" role="alert" hidden></div>
+      <div class="panel" id="panel"></div>
+    </section>
+
+    <p class="loading" id="loading" hidden>Loading…</p>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="../js/validate-content.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
