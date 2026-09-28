@@ -97,6 +97,27 @@ function render(template, { site, tags, projects }) {
   return html;
 }
 
+// Cloudflare Pages response headers. Dev is never indexed; in production the
+// duplicate *.pages.dev address is kept out of search results.
+function headers() {
+  const common = [
+    "  X-Content-Type-Options: nosniff",
+    "  Referrer-Policy: strict-origin-when-cross-origin",
+    "  X-Frame-Options: DENY",
+  ];
+  if (ENV === "dev") {
+    return ["/*", ...common, "  X-Robots-Tag: noindex, nofollow", ""].join("\n");
+  }
+  return [
+    "/*",
+    ...common,
+    "",
+    "https://:project.pages.dev/*",
+    "  X-Robots-Tag: noindex, nofollow",
+    "",
+  ].join("\n");
+}
+
 // Every local src/href in the page must point at a file in dist/.
 function checkReferences(html) {
   const missing = [];
@@ -140,6 +161,8 @@ function main() {
       ? "User-agent: *\nDisallow: /\n"
       : fs.readFileSync(path.join(ROOT, "robots.txt"), "utf8")
   );
+
+  fs.writeFileSync(path.join(OUT, "_headers"), headers());
 
   const missing = checkReferences(html);
   if (missing.length) fail(`missing files referenced by index.html: ${missing.join(", ")}`);
