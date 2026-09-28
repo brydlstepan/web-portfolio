@@ -30,7 +30,7 @@ Non-public routes:
 | --- | --- | --- |
 | `/admin/` | Content admin | Password (HTTP Basic Auth) + GitHub sign-in |
 | `/auth/*` | GitHub sign-in callback (Pages Function) | — |
-| dev.brydlstepan.cz | Preview of the `Dev` branch | Public, `noindex` |
+| dev.brydlstepan.cz, `*.pages.dev` | Preview of the `Dev` branch | Password (`PREVIEW_PASSWORD`), `noindex` |
 
 ---
 
@@ -188,7 +188,7 @@ The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already 
   brydlstepan.cz            ← main   (production)
   brydlstepan.cz/admin/     ← admin  (password + GitHub sign-in)
   brydlstepan.cz/auth/*     ← Pages Function: GitHub sign-in callback
-  dev.brydlstepan.cz        ← Dev    (preview, public, noindex)
+  dev.brydlstepan.cz        ← Dev    (preview, password, noindex)
                                   ▲
                GitHub Actions: build → wrangler pages deploy
 ```
@@ -196,14 +196,26 @@ The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already 
 | Branch | Environment | Access |
 | --- | --- | --- |
 | `main` | brydlstepan.cz | Public |
-| `Dev` | dev.brydlstepan.cz | Public, `noindex` — drafts are public in the repo anyway |
+| `Dev` | dev.brydlstepan.cz | Password (`PREVIEW_PASSWORD`), `noindex` |
 | `feat/*` | Not deployed | — |
 
 **Direct Upload, not the Cloudflare Git integration.** The Git integration builds every push to every branch and can only be told to skip (`[skip ci]`). Deploying from GitHub Actions with `wrangler pages deploy` keeps the `[build]` gating used in lossless-web, and Cloudflare never gets access to the repo. A Direct Upload project cannot be switched to the Git integration later — acceptable.
 
 **`*.pages.dev` addresses.** Every deploy also appears at `*.web-portfolio-7ca.pages.dev`, including a copy of production.
 
-- Per-deploy preview URLs stay public, like dev; the build sends `noindex` on every `*.pages.dev` address
+- Every `*.pages.dev` address is behind the dev password and sends `noindex`
+
+**Password gate (`functions/_middleware.js`).** HTTP Basic Auth, keyed on hostname and path:
+
+| Request | Password |
+| --- | --- |
+| dev.brydlstepan.cz, `*.pages.dev` | `PREVIEW_PASSWORD` |
+| `/admin/*` on any host | `ADMIN_PASSWORD` |
+| brydlstepan.cz, www | none |
+
+- Passwords are encrypted variables in the Pages project; a missing one locks the area (503) instead of opening it
+- Compared as SHA-256 hashes in constant time
+- The build writes `_routes.json`: dev runs the gate on every path, production only on `/admin/*` — the public site stays plain static files and does not use the Functions request quota
 - Redirect `web-portfolio-7ca.pages.dev` to brydlstepan.cz, or send `X-Robots-Tag: noindex` on it
 
 **Headers (`_headers`)**
@@ -379,7 +391,7 @@ Accepted — drafts do not need to be secret, and a public repo keeps branch pro
 **Fix:** `Dev` holds only release-ready work; code in progress lives on `feat/*` branches.
 
 **5. Duplicate and open copies on `*.pages.dev`.**
-**Fix:** `X-Robots-Tag: noindex` on every `*.pages.dev` address. Their content is public in the repo anyway.
+**Fix:** the dev password and `X-Robots-Tag: noindex` on every `*.pages.dev` address.
 
 **6. Client-side JSON rendering weakens SEO.**
 **Fix:** the CI build generates the final HTML; filters operate on pre-rendered cards.
@@ -423,8 +435,8 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 | Drafts | `Dev` branch is the draft space; no separate store |
 | Repo visibility | Public — drafts on `Dev` may be read; free branch protection on `main` |
 | Hosting | Cloudflare Pages, Direct Upload from GitHub Actions |
-| Environments | `Dev` → dev.brydlstepan.cz (public, noindex), `main` → brydlstepan.cz |
-| Admin gate | Password (Basic Auth) in front of the GitHub sign-in; Cloudflare Access / Zero Trust not used — can be added later without code changes |
+| Environments | `Dev` → dev.brydlstepan.cz (password, noindex), `main` → brydlstepan.cz |
+| Password gates | Basic Auth Pages Function: `PREVIEW_PASSWORD` on dev and `*.pages.dev`, `ADMIN_PASSWORD` on `/admin/*`; Cloudflare Access / Zero Trust not used |
 | Deploy trigger | `[build]` in a commit message, or manual run |
 | Release | PR `Dev` → `main`, merge commit, `[build]` title |
 | Project detail | Modal with media gallery, from v1 |
@@ -470,7 +482,7 @@ The current under-construction page stays live until step 15.
 | Step | Where |
 | --- | --- |
 | Create the Pages project and API token | Cloudflare dashboard |
-| Add custom domains; set `ADMIN_PASSWORD`; rate-limiting rule on `/admin/*` | Cloudflare dashboard |
+| Add custom domains; set `PREVIEW_PASSWORD` and `ADMIN_PASSWORD`; rate-limiting rule on `/admin/*` | Cloudflare dashboard |
 | Add `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` secrets | GitHub → Settings → Environments |
 | Create and install the GitHub App, generate client secret | GitHub → Settings → Developer settings |
 | Put the client ID and secret into the Pages project | Cloudflare dashboard |

@@ -121,6 +121,15 @@ function headers() {
   ].join("\n");
 }
 
+// Which requests run functions/_middleware.js (the password gate). Dev gates
+// every path; production only the admin, so the public site is served as
+// plain static files.
+function routes() {
+  return ENV === "dev"
+    ? { version: 1, include: ["/*"], exclude: [] }
+    : { version: 1, include: ["/admin", "/admin/*"], exclude: [] };
+}
+
 // Every local src/href in the page must point at a file in dist/.
 function checkReferences(html) {
   const missing = [];
@@ -166,6 +175,7 @@ function main() {
   );
 
   fs.writeFileSync(path.join(OUT, "_headers"), headers());
+  fs.writeFileSync(path.join(OUT, "_routes.json"), JSON.stringify(routes(), null, 2) + "\n");
 
   const missing = checkReferences(html);
   if (missing.length) fail(`missing files referenced by index.html: ${missing.join(", ")}`);
