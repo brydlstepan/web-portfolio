@@ -1,6 +1,6 @@
 # Portfolio — Plan
 
-Personal portfolio for **brydlstepan.cz**. Static public site, managed by a private local configurator, published through git.
+Personal portfolio for **brydlstepan.cz**. Static public site on Cloudflare Pages, managed through an online admin with GitHub sign-in, published through git (`Dev` → dev.brydlstepan.cz, `main` → brydlstepan.cz).
 
 ---
 
@@ -9,7 +9,8 @@ Personal portfolio for **brydlstepan.cz**. Static public site, managed by a priv
 - Present professional work on a single, well-designed page
 - Keep the site fast, static, and free to host
 - Manage content (projects, tags) without editing HTML by hand
-- Keep the admin tool private — it never goes online
+- Edit content from any browser, signed in with GitHub, without a server of our own
+- Preview every change on a dev environment before it goes live
 - Preserve the existing visual language: black base, frosted glass, blue↔turquoise light
 
 ---
@@ -23,7 +24,13 @@ Personal portfolio for **brydlstepan.cz**. Static public site, managed by a priv
 | GitHub | External | Code |
 | LinkedIn | External | Professional profile |
 
-No public `/admin` route. The configurator runs only on the local machine.
+Non-public routes:
+
+| Route | Purpose | Protection |
+| --- | --- | --- |
+| `/admin/` | Content admin | Cloudflare Access + GitHub sign-in |
+| `/auth/*` | GitHub sign-in callback (Pages Function) | — |
+| dev.brydlstepan.cz | Preview of the `Dev` branch | Cloudflare Access, `noindex` |
 
 ---
 
@@ -87,11 +94,11 @@ Behavior:
 
 ## 6. Content model
 
-Content lives in the repo as JSON. The configurator reads and writes these files.
+Content lives in the repo as JSON. The admin reads and writes these files through the GitHub API.
 
 ### `content/tags.json`
 
-Tags are free-form and created in the configurator. A project can carry several, and they do not all have to describe the same thing — discipline and scale can coexist.
+Tags are free-form and created in the admin. A project can carry several, and they do not all have to describe the same thing — discipline and scale can coexist.
 
 ```json
 [
@@ -146,7 +153,7 @@ Tags are free-form and created in the configurator. A project can carry several,
 ]
 ```
 
-Gallery order is authored in the configurator. When a project has a video, it is placed first so the modal opens on it.
+Gallery order is authored in the admin. When a project has a video, it is placed first so the modal opens on it.
 
 Videos are hosted on YouTube or Vimeo (`provider` is `youtube` or `vimeo`). The repo stores only the video ID and a locally hosted poster frame — no video files, so the repo stays small.
 
@@ -171,82 +178,154 @@ Tags are referenced by `id`, so renaming a label never breaks the projects using
 
 ---
 
-## 7. Local configurator
+## 7. Hosting and environments
 
-A small web UI that runs on `localhost` only.
+The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already on Cloudflare, and Pages adds what GitHub Pages cannot: a preview environment per branch, custom response headers, server functions for the sign-in callback, and built-in Cloudflare Access.
 
-**Capabilities**
+```
+                     Cloudflare (DNS, proxy, Access)
+                                  │
+  brydlstepan.cz            ← main   (production)
+  brydlstepan.cz/admin/     ← admin  (Access + GitHub sign-in)
+  brydlstepan.cz/auth/*     ← Pages Function: GitHub sign-in callback
+  dev.brydlstepan.cz        ← Dev    (preview, Access, noindex)
+                                  ▲
+               GitHub Actions: build → wrangler pages deploy
+```
 
-- Tags: create, rename, reorder, group, show/hide
-- Projects: create, edit, reorder, publish/unpublish, assign tags, order the gallery
-- Site copy: hero, about, AI, contact, social links
-- Images: pick a file, resize/convert to WebP, write into `assets/`
-- Build: render the static pages from the published content
-
-**Rules**
-
-- Binds to `127.0.0.1` only — never `0.0.0.0`
-- Never runs on a server, never reachable from the internet
-- No credentials or tokens stored in the repo
-- All file writes validated against an allowlist of target directories
-
-**Draft handling**
-
-Drafts stay out of the repo entirely. The configurator keeps two stores:
-
-| Store | Location | Committed |
+| Branch | Environment | Access |
 | --- | --- | --- |
-| Working content, including drafts | `.drafts/` | No — gitignored |
-| Published content | `content/*.json` | Yes |
+| `main` | brydlstepan.cz | Public |
+| `Dev` | dev.brydlstepan.cz | Cloudflare Access (one-time code to my e-mail), `noindex` |
+| `feat/*` | Not deployed | — |
 
-Toggling *publish* moves an item from the draft store into the committed content. Nothing unpublished ever reaches GitHub, so there is no draft leak and no build-time filtering to get wrong.
+**Direct Upload, not the Cloudflare Git integration.** The Git integration builds every push to every branch and can only be told to skip (`[skip ci]`). Deploying from GitHub Actions with `wrangler pages deploy` keeps the `[build]` gating used in lossless-web, and Cloudflare never gets access to the repo. A Direct Upload project cannot be switched to the Git integration later — acceptable.
 
-**Source is committed, not published**
+**`*.pages.dev` addresses.** Every deploy also appears at `*.web-portfolio.pages.dev`, including a copy of production.
 
-The configurator's own source lives in the repo so it has version history and a backup. It is a local Node tool — GitHub Pages only serves it as inert text, and it holds no secrets. Any local settings live in a gitignored file.
+- Enable Access for preview deployments (one setting)
+- Redirect `web-portfolio.pages.dev` to brydlstepan.cz, or send `X-Robots-Tag: noindex` on it
 
-Gitignoring the tool itself was considered and rejected: it would leave the only copy on one machine with no history.
+**Headers (`_headers`)**
 
----
+- `/admin/*` — strict CSP: `default-src 'self'; connect-src 'self' https://api.github.com; img-src 'self' data: blob:; frame-ancestors 'none'`, plus `Referrer-Policy: no-referrer`
+- dev deploys — `X-Robots-Tag: noindex` (the dev build also adds `<meta name="robots" content="noindex">`)
 
-## 8. Publishing workflow
+**Coexistence with self-hosted services.** The zone also carries private hostnames (e.g. `immich.brydlstepan.cz`) that resolve to LAN/Tailscale addresses, DNS-only.
 
-```
-Run configurator locally
-        ↓
-Edit content → drafts stay in .drafts/ (gitignored)
-        ↓
-Publish an item → written into content/*.json + assets/
-        ↓
-Build → renders index.html from templates
-        ↓
-git commit + push
-        ↓
-GitHub Pages deploys → brydlstepan.cz
-```
+- During the switch, only replace the apex (GitHub Pages A/AAAA records) and add `dev`; leave every other record untouched. Explicit records override a wildcard, so a `*.brydlstepan.cz` record keeps working
+- LAN and tailnet resolve `brydlstepan.cz` through AdGuard Home on `dxp4800plus` (Tailscale split DNS → `100.100.200.1`), which rewrites `*.brydlstepan.cz` to Nginx Proxy Manager. The wildcard does not match the apex, but it does catch `www` and `dev`, which would land on NPM instead of Cloudflare. **Fix:** in AdGuard → Filters → DNS rewrites add exceptions `dev.brydlstepan.cz` → `A` and → `AAAA` (same for `www`); the literal answer `A`/`AAAA` means "use the upstream answer", and a specific rewrite wins over the wildcard. Test with `nslookup dev.brydlstepan.cz 100.100.200.1`
+- `auth.brydlstepan.cz` is already taken (tinyauth on NPM), so the sign-in callback stays on the apex path `/auth/*`, not a subdomain
+- The CI token gets **Pages: Edit** only — never reuse the DNS-edit token used for certificates on the home server
+- Access applications cover only `dev.brydlstepan.cz`, `brydlstepan.cz/admin/*` and preview deployments — no `*.brydlstepan.cz` wildcard
+- Zone settings (SSL mode, Always Use HTTPS) only affect proxied records; do not enable HSTS with `includeSubDomains` / preload unless every subdomain serves valid HTTPS
 
-The build runs locally inside the configurator, so no GitHub Actions workflow is required. Generated pages are committed alongside the content that produced them.
-
-Publishing is an explicit push, not an instant remote save. That is a deliberate trade-off: full version history, rollback, and zero backend.
+**Pages or Workers.** Cloudflare has been steering new projects toward Workers with static assets. Check which is recommended when setting up; the plan works on either, only the deploy command and function location change.
 
 ---
 
-## 9. Tech stack
+## 8. Deployment
+
+`.github/workflows/deploy.yml`, the same model as lossless-web:
+
+| Trigger | Result |
+| --- | --- |
+| Push to `Dev` or `main` with `[build]` in a commit message | Build and deploy that branch |
+| Admin *Preview* / *Publish* | Their commits carry `[build]` |
+| Actions → Deploy → Run workflow | Build and deploy the chosen branch |
+| Any other push | Nothing deployed |
+
+Steps:
+
+1. Checkout
+2. Validate `content/*.json` against the schema (types, required fields, tag ids exist, referenced images exist)
+3. Render `index.html` from the templates and published content
+4. On `Dev`: inject `noindex`
+5. Check internal links and image paths
+6. `wrangler pages deploy` — `--branch=main` for production, `--branch=Dev` for the preview
+
+The repo holds only sources (templates, CSS, JS, `content/*.json`, images). The built site exists only in the Actions run and on Cloudflare; it is never committed.
+
+Secrets in GitHub (environment `web_portfolio`): `CLOUDFLARE_API_TOKEN` (Pages: Edit, this account only), `CLOUDFLARE_ACCOUNT_ID`.
+
+**Releasing:** pull request `Dev` → `main`, **Create a merge commit** (not squash or rebase, so both branches keep a shared history), title `[build] …`.
+
+---
+
+## 9. Admin
+
+### Content flow — `Dev` is the draft space
+
+```
+edit in admin → Save            → commit to Dev (no deploy)
+              → Preview         → commit with [build] → dev.brydlstepan.cz
+              → Publish to live → PR Dev → main, merged → brydlstepan.cz
+```
+
+- Every save is a commit: full history, rollback via git
+- A draft is content that is on `Dev` and not yet on `main`; no separate draft store, `published` stays as a show/hide switch
+- `Dev` holds only work that is ready to go live — *Publish* merges all of it, code included. Unfinished code lives on `feat/*` branches and is merged into `Dev` when done
+- The admin shows how far `Dev` is ahead of `main`, the last deploy, and a link to dev.brydlstepan.cz
+
+### Sign-in
+
+- **GitHub App** (not an OAuth App), installed only on `web-portfolio`
+  - Permissions: Contents read/write, Pull requests read/write, Metadata read
+  - User tokens expire after 8 hours; re-sign-in afterwards (no refresh-token handling in v1)
+  - Callback URL: `https://brydlstepan.cz/auth/callback`
+- **Pages Function** `functions/auth/`
+  - `/auth/login` — redirects to GitHub with a random `state` stored in a short-lived httpOnly cookie
+  - `/auth/callback` — checks `state`, exchanges the code for a token with the client secret, redirects to `/admin/#token=…` (fragment, never sent to a server)
+  - Client ID and secret live in the Pages project's encrypted environment variables; nothing is stored
+- **Admin**
+  - Reads the token from the fragment, clears the URL, keeps it in `sessionStorage` only
+  - Calls `GET /user` and rejects any account other than `brydlstepan`
+  - *Sign out* clears the token
+
+### Features
+
+- **Projects** — list, create, edit, reorder, show/hide, assign tags, order the gallery (video first)
+- **Tags** — create, rename, group, reorder, show/hide
+- **Site** — hero, about, AI, contact, social links
+- **Images** — resized in the browser (max 2000px), converted to WebP, thumbnail generated
+- **Saving** — all files of one save go into a single commit via the Git Data API (blobs → tree → commit → update ref)
+
+### Code
+
+- `admin/` — plain HTML, CSS, JS written for this site; no npm packages, no CDN
+- All user text inserted with `textContent`, never `innerHTML`
+- Write allowlist enforced in the admin: `content/*.json` and `assets/projects/**` only; any other path is refused
+
+### Security layers
+
+1. **Cloudflare Access** on `/admin/*` and dev.brydlstepan.cz — nothing loads before it passes
+2. **GitHub sign-in** plus the `brydlstepan` account check
+3. **GitHub permissions** — the final authority on who can write
+4. **Narrow token** — one repo, contents and PRs only, 8-hour lifetime
+5. **Strict CSP** on the admin — only its own scripts, only `api.github.com`
+6. **Path allowlist** in the admin
+7. **Branch protection** on `main` — PR required, no force-push, no deletion, content check must pass
+
+---
+
+## 10. Tech stack
 
 | Layer | Choice | Reason |
 | --- | --- | --- |
 | Public site | Static HTML + CSS + vanilla JS | Already the case; no framework needed at this size |
 | Content | JSON files in the repo | Free, versioned, no database |
-| Rendering | Configurator generates HTML at build time | SEO-friendly, no loading flash |
+| Rendering | Build script in GitHub Actions generates HTML | SEO-friendly, no loading flash |
 | Interactivity | Small JS for filters and menu | Filters act on rendered DOM |
-| Configurator | Node.js + local HTTP server + plain UI | Minimal dependencies, local-only |
-| Hosting | GitHub Pages (already configured, `CNAME` → brydlstepan.cz) | Free, already working |
+| Admin | Static page in `admin/`, vanilla JS, GitHub REST API | No backend, no third-party code |
+| Sign-in | GitHub App + Cloudflare Pages Function | Narrow, expiring tokens; secret never in the browser |
+| Hosting | Cloudflare Pages, Direct Upload from GitHub Actions | Branch previews, headers, functions, Access |
 | DNS / TLS | Cloudflare | Already in use |
+| Access control | Cloudflare Access (free plan) | Locks admin and dev before any code runs |
 | Analytics | Cloudflare Web Analytics | Free, cookieless, no consent banner needed |
 
 ### Analytics
 
-**Cloudflare Web Analytics** is the recommended choice. It is free with no traffic cap, uses no cookies and no cross-site identifiers, and therefore needs no cookie banner under GDPR. The domain is already on Cloudflare, so it is one script tag in the page head and nothing else to maintain.
+**Cloudflare Web Analytics** is the recommended choice. It is free with no traffic cap, uses no cookies and no cross-site identifiers, and therefore needs no cookie banner under GDPR. The domain is already on Cloudflare, so it is one script tag in the page head and nothing else to maintain. Add it to production only, not to dev.
 
 It gives page views, referrers, countries, device and browser breakdowns, and Core Web Vitals — everything a portfolio needs.
 
@@ -258,7 +337,7 @@ Recommendation: Cloudflare Web Analytics now. Add GA4 later only if something sp
 
 ---
 
-## 10. Design system
+## 11. Design system
 
 Carried over from the current under-construction page:
 
@@ -269,94 +348,87 @@ Carried over from the current under-construction page:
 - Cursor-reactive glow reserved for hero/feature elements, not every card
 - `prefers-reduced-motion` respected throughout
 
+The admin uses the same tokens in a plainer, denser layout.
+
 ---
 
-## 11. Validation
+## 12. Validation
 
 An honest review of the choices above.
 
 ### Sound
 
 - **Static + JSON + git** is a good fit. A portfolio changes rarely; a live database would add cost, failure modes, and an attack surface for no benefit.
-- **Local-only admin** removes the largest security risk in the original plan. No login endpoint, no session handling, no public write path.
-- **No contact form** means no backend, no spam pipeline, no data handling obligations.
+- **No backend of our own.** The only server code is the sign-in callback, which stores nothing. All writes go through GitHub, which already handles authentication, permissions, and history.
+- **Own admin instead of Decap/Sveltia** — fits the content model as it is, and has no third-party script that could be swapped for a malicious one.
+- **No contact form** means no spam pipeline and no data handling obligations.
 - **Tags by `id`** avoids the classic bug where renaming a tag orphans the projects using it.
-- **GitHub Pages already works** with the domain — no reason to migrate.
 
 ### Issues found, with fixes
 
-**1. GitHub Pages publishes the entire branch.** — *Resolved*
-With Jekyll disabled via `.nojekyll`, every file in the published branch is served, including the `configurator/` folder.
+**1. A public admin is an attack surface.**
+**Fix:** layered protection (§9) — Cloudflare Access first, then GitHub sign-in with an account check, a narrow expiring token, strict CSP, and a path allowlist.
 
-Publishing the tool's source is acceptable here. It is a local Node application; GitHub Pages serves it as inert text and cannot execute it. There is nothing sensitive in a single-user content editor, and its source being readable changes nothing about who can write to the site — that still requires push access to the repo.
+**2. Token theft through XSS on the admin.**
+A token in the page is only as safe as the page.
+**Fix:** no third-party scripts, CSP limited to `'self'` and `api.github.com`, `textContent` only, token in `sessionStorage` (gone when the tab closes), 8-hour lifetime.
 
-Two conditions make this safe:
+**3. Drafts on `Dev` are readable while the repo is public.**
+Accepted — drafts do not need to be secret, and a public repo keeps branch protection free.
 
-- No secrets, tokens, or local config are ever committed (local settings live in a gitignored file)
-- Drafts are not stored in committed content — see below
+**4. *Publish* also ships unfinished code on `Dev`.**
+**Fix:** `Dev` holds only release-ready work; code in progress lives on `feat/*` branches.
 
-A `robots.txt` disallow keeps the folder out of search results. Cosmetic, not security.
+**5. Duplicate and open copies on `*.pages.dev`.**
+**Fix:** Access on preview deployments, redirect or `noindex` on the production `pages.dev` address.
 
-**2. Unpublished drafts can leak.** — *Resolved by design*
-This was the real risk, not the configurator source. A committed `projects.json` containing `"published": false` entries is readable by anyone, no matter how the page renders.
+**6. Client-side JSON rendering weakens SEO.**
+**Fix:** the CI build generates the final HTML; filters operate on pre-rendered cards.
 
-**Fix:** drafts never enter the repo. The configurator keeps them in a gitignored `.drafts/` store and only writes an item into `content/*.json` when it is published. Deleting or unpublishing moves it back out.
+**7. Image weight in git.**
+Git stores every version forever; the repo grows and never shrinks.
+**Fix:** the admin converts to WebP, caps dimensions at 2000px, and generates thumbnails. Cloudflare Pages limits (20,000 files, 25 MiB per file) are far away. Revisit external asset hosting only if the repo approaches a few hundred MB.
 
-This is stronger than filtering at build time, because there is no filter step that can silently break.
+**8. Cloudflare proxy TLS.**
+Currently **Full** (automatic mode). The GitHub Pages origin has no valid certificate for brydlstepan.cz (checked 2026-09-28: `SEC_E_WRONG_PRINCIPAL`), so **Full (strict)** would break the current site.
+**Fix:** keep Full until the switch. Cloudflare Pages is served by Cloudflare itself, so the mode stops mattering for the site; afterwards switch to **Full (strict)** if no other proxied record relies on a self-signed origin.
 
-**3. Client-side JSON rendering weakens SEO.**
-Fetching JSON and building the DOM in the browser means crawlers and link previews may see an empty page.
-
-**Fix:** the configurator already is a build tool — have it **generate the final HTML**. Filters then operate on pre-rendered cards. Best of both.
-
-**4. Cloudflare proxy + GitHub Pages TLS.**
-If the domain is proxied (orange cloud), SSL/TLS mode must be **Full**. `Flexible` causes redirect loops with GitHub Pages.
-
-**Fix:** verify the SSL/TLS mode in Cloudflare when the site goes live.
-
-**5. Image weight in git.**
-A portfolio is image-heavy. Git stores every version forever; the repo grows and never shrinks. GitHub Pages soft limits are roughly 1 GB repo size and 100 GB/month bandwidth.
-
-**Fix:** the configurator should convert to WebP/AVIF, cap dimensions (e.g. 2000px), and generate thumbnails. Revisit external asset hosting only if the repo approaches a few hundred MB.
-
-**6. Local server safety.**
-A local tool that writes files and accepts uploads still deserves basic hygiene.
-
-**Fix:** bind to `127.0.0.1`, reject path traversal, restrict writes to `content/` and `assets/`, and validate uploaded file types.
-
-**7. Public email invites scraping.**
-`mailto:` in plain HTML gets harvested.
-
+**9. Public email invites scraping.**
 **Fix (optional):** obfuscate lightly or accept it. Low stakes, and spam filters are decent.
-
-**8. Duplicated markup across pages.** — *Resolved by scope*
-The site is a single page again, so there is no second copy of the header and footer to drift.
 
 ### Trade-offs accepted
 
-- **Publishing needs a push** — no instant remote edits, no editing from a phone
-- **Admin is machine-bound** — content edits only happen where the configurator lives; git keeps the content itself portable
-- **A build step exists** — slightly more than "edit HTML and commit", but it removes the duplication and draft-leak problems
+- **Two services** — GitHub for code and content, Cloudflare for hosting and access; one API token connects them
+- **Edits reach production in two steps** (*Preview*, then *Publish*) — deliberate, it is the review step
+- **Re-sign-in every 8 hours** — simpler than refresh-token handling
+- **A build step exists** — more than "edit HTML and commit", but it removes duplication and the SEO problem
 
 ### Rejected, and why
 
 | Option | Why not |
 | --- | --- |
-| Sanity / Contentful | Free tiers work, but add an external dependency and account for content that changes a few times a year |
-| Decap CMS | Would work, but the admin lives online and needs OAuth; local-only was the explicit preference |
-| Cloudflare Workers + D1 custom admin | Effectively writing a CMS, plus a public write endpoint to secure |
-| Public `/admin` on the domain | Requires auth, a backend, and ongoing maintenance for a single-user tool |
+| Sanity / Contentful | External dependency and account for content that changes a few times a year |
+| Decap / Sveltia CMS | Generic content model (top-level JSON arrays unsupported in Decap), third-party script with access to the repo token |
+| Local-only configurator | No editing away from the one machine; replaced by the online admin |
+| GitHub Pages | One site per repo (no dev subdomain), no custom headers, no server functions |
+| Separate drafts repo | Unnecessary; `Dev` serves as the draft space |
+| Cloudflare Git integration | Builds every push; Direct Upload from Actions keeps `[build]` gating |
 
 ---
 
-## 12. Decisions made
+## 13. Decisions made
 
 | Question | Decision |
 | --- | --- |
-| Configurator location | In this repo, committed for backup; drafts kept in a gitignored store |
+| Admin | Own online admin at `/admin/`, GitHub sign-in via a GitHub App |
+| Drafts | `Dev` branch is the draft space; no separate store |
+| Repo visibility | Public — drafts on `Dev` may be read; free branch protection on `main` |
+| Hosting | Cloudflare Pages, Direct Upload from GitHub Actions |
+| Environments | `Dev` → dev.brydlstepan.cz (Access), `main` → brydlstepan.cz |
+| Deploy trigger | `[build]` in a commit message, or manual run |
+| Release | PR `Dev` → `main`, merge commit, `[build]` title |
 | Project detail | Modal with media gallery, from v1 |
 | Tone | Keep the dry humor; drop it later if it reads wrong against real work |
-| Branch | Development happens on `Dev` |
 | Role line | **Unreal Engine Dev / 3D Generalist** |
 | Video hosting | YouTube or Vimeo embeds, loaded on click behind a poster |
 | Tags | 3D, Unreal Engine, Graphics, AR/VR, Visualization, Web, Large project, Medium project |
@@ -364,21 +436,43 @@ The site is a single page again, so there is no second copy of the header and fo
 | Filtering | Single-select in v1; multi-select possible later |
 | Analytics | Cloudflare Web Analytics |
 
-### Still open
+---
 
-Nothing blocking. Remaining items are content: real project entries, the About text, and the LinkedIn and Instagram URLs.
+## 14. Still open
+
+- **Save behavior** — deploy to dev on every save, or only on *Preview*? Leaning: only on *Preview*
+- **Content** — real project entries, the About text, LinkedIn and Instagram URLs
 
 ---
 
-## 13. Build order
+## 15. Build order
 
-1. **Content schema** — finalize the JSON shapes above
+1. **Content schema** — finalize the JSON shapes above, add a validator
 2. **One-pager shell** — header, sections, footer, responsive layout
 3. **Work grid + filters** — against mock content
 4. **Project modal** — gallery, keyboard navigation, hash linking
-5. **Configurator** — local UI, content editing, image handling, draft store
-6. **Build step** — templates → static pages
-7. **Deploy** — verify domain, TLS mode, and Pages output
-8. **Content pass** — real projects, real copy
+5. **Build script** — templates → static `index.html`
+6. **Cloudflare Pages** — create the Direct Upload project, API token, deploy workflow with `[build]` gating
+7. **Environments** — custom domains for production and dev, Access on dev and preview deployments, `_headers`, `noindex` on dev
+8. **Switch over** — disable GitHub Pages, remove `CNAME` and `.nojekyll` if unneeded, verify TLS
+9. **GitHub App + sign-in function** — `/auth/login`, `/auth/callback`
+10. **Admin: shell** — sign-in, account check, Access on `/admin/*`, CSP
+11. **Admin: editors** — Projects, then Tags and Site
+12. **Admin: images** — resize, WebP, thumbnails, single-commit saves
+13. **Admin: Preview / Publish** — `[build]` commits, PR and merge, `Dev` vs `main` status
+14. **Hardening** — branch protection on `main`, README deployment section
+15. **Content pass** — real projects, real copy
 
-The current under-construction page stays live until step 8.
+The current under-construction page stays live until step 15.
+
+### Manual steps (done by me, not in code)
+
+| Step | Where |
+| --- | --- |
+| Create the Pages project and API token | Cloudflare dashboard |
+| Add custom domains, Access applications, preview access | Cloudflare dashboard |
+| Add `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` secrets | GitHub → Settings → Environments |
+| Create and install the GitHub App, generate client secret | GitHub → Settings → Developer settings |
+| Put the client ID and secret into the Pages project | Cloudflare dashboard |
+| Disable GitHub Pages | GitHub → Settings → Pages |
+| Branch protection on `main` | GitHub → Settings → Branches |
