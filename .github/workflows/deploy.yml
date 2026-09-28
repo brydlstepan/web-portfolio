@@ -32,6 +32,9 @@ jobs:
       - name: Build
         env:
           SITE_ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+          # Only their hashes reach the deployed password gate (functions/_middleware.js).
+          PREVIEW_PASSWORD: ${{ secrets.PREVIEW_PASSWORD }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: node tools/build.js
 
       - name: Check that secrets are configured

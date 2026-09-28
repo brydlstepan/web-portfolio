@@ -213,7 +213,7 @@ The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already 
 | `/admin/*` on any host | `ADMIN_PASSWORD` |
 | brydlstepan.cz, www | none |
 
-- Passwords are encrypted variables in the Pages project; a missing one locks the area (503) instead of opening it
+- Passwords are GitHub Secrets (`web-portfolio` environment); the build bundles only their SHA-256 hashes into the function, never into `dist/` or git. A missing one locks the area (503) instead of opening it
 - Compared as SHA-256 hashes in constant time
 - The build writes `_routes.json`: dev runs the gate on every path, production only on `/admin/*` — the public site stays plain static files and does not use the Functions request quota
 - Redirect `web-portfolio-7ca.pages.dev` to brydlstepan.cz, or send `X-Robots-Tag: noindex` on it
@@ -482,7 +482,8 @@ The current under-construction page stays live until step 15.
 | Step | Where |
 | --- | --- |
 | Create the Pages project and API token | Cloudflare dashboard |
-| Add custom domains; set `PREVIEW_PASSWORD` and `ADMIN_PASSWORD`; rate-limiting rule on `/admin/*` | Cloudflare dashboard |
+| Add custom domains; rate-limiting rule on `/admin/*` | Cloudflare dashboard |
+| Add `PREVIEW_PASSWORD`, `ADMIN_PASSWORD` secrets | GitHub → Settings → Environments |
 | Add `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` secrets | GitHub → Settings → Environments |
 | Create and install the GitHub App, generate client secret | GitHub → Settings → Developer settings |
 | Put the client ID and secret into the Pages project | Cloudflare dashboard |

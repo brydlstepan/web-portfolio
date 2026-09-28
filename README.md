@@ -35,5 +35,5 @@ node tools/build.js --env=dev  # dev build: noindex, robots disallow all
 - `.github/workflows/deploy.yml` builds and uploads to Cloudflare Pages (project `web-portfolio`, Direct Upload, address `web-portfolio-7ca.pages.dev`; the `Dev` branch is `dev.web-portfolio-7ca.pages.dev`).
 - Deploys run **only when a pushed commit contains `[build]`**, or via Actions → Deploy → Run workflow. To deploy without code changes: `git commit --allow-empty -m "[build] Deploy to dev"`.
 - Releases: pull request `Dev` → `main` with **Create a merge commit** and a `[build] …` title.
-- `functions/_middleware.js` is the password gate: `PREVIEW_PASSWORD` on dev and `*.pages.dev`, `ADMIN_PASSWORD` on `/admin/*`. Both are set in Cloudflare → Workers & Pages → web-portfolio → Settings → Variables and Secrets; a missing password locks the area.
-- GitHub environment `web-portfolio` holds `CLOUDFLARE_API_TOKEN` (secret, *Cloudflare Pages: Edit* only) and `CLOUDFLARE_ACCOUNT_ID`.
+- `functions/_middleware.js` is the password gate: `PREVIEW_PASSWORD` on dev and `*.pages.dev`, `ADMIN_PASSWORD` on `/admin/*`. Both are GitHub Secrets in the `web-portfolio` environment; the build bundles only their SHA-256 hashes into the function (`.generated/`, gitignored). A missing password locks the area. To change one: update the secret and redeploy.
+- GitHub environment `web-portfolio` holds `CLOUDFLARE_API_TOKEN` (*Cloudflare Pages: Edit* only), `CLOUDFLARE_ACCOUNT_ID`, `PREVIEW_PASSWORD` and `ADMIN_PASSWORD`.
