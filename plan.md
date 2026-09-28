@@ -246,7 +246,7 @@ Steps:
 
 The repo holds only sources (templates, CSS, JS, `content/*.json`, images). The built site exists only in the Actions run and on Cloudflare; it is never committed.
 
-Secrets in GitHub (environment `web_portfolio`): `CLOUDFLARE_API_TOKEN` (Pages: Edit, this account only), `CLOUDFLARE_ACCOUNT_ID`.
+Secrets in GitHub (environment `web-portfolio`): `CLOUDFLARE_API_TOKEN` (Pages: Edit, this account only), `CLOUDFLARE_ACCOUNT_ID`.
 
 **Releasing:** pull request `Dev` → `main`, **Create a merge commit** (not squash or rebase, so both branches keep a shared history), title `[build] …`.
 

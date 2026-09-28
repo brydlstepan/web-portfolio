@@ -35,4 +35,4 @@ node tools/build.js --env=dev  # dev build: noindex, robots disallow all
 - `.github/workflows/deploy.yml` builds and uploads to Cloudflare Pages (project `web-portfolio`, Direct Upload).
 - Deploys run **only when a pushed commit contains `[build]`**, or via Actions → Deploy → Run workflow. To deploy without code changes: `git commit --allow-empty -m "[build] Deploy to dev"`.
 - Releases: pull request `Dev` → `main` with **Create a merge commit** and a `[build] …` title.
-- GitHub environment `web_portfolio` holds `CLOUDFLARE_API_TOKEN` (secret, *Cloudflare Pages: Edit* only) and `CLOUDFLARE_ACCOUNT_ID`.
+- GitHub environment `web-portfolio` holds `CLOUDFLARE_API_TOKEN` (secret, *Cloudflare Pages: Edit* only) and `CLOUDFLARE_ACCOUNT_ID`.
