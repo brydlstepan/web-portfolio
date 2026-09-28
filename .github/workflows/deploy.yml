@@ -59,4 +59,4 @@ jobs:
         run: |
           # First run only: create the Direct Upload project (fails harmlessly if it exists).
           npx --yes wrangler@4 pages project create web-portfolio --production-branch=main || true
-          npx --yes wrangler@4 pages deploy dist --project-name=web-portfolio --branch="$BRANCH" --commit-hash="$GITHUB_SHA"
+          npx --yes wrangler@4 pages deploy dist --project-name=web-portfolio --branch="$BRANCH" --commit-hash="$GITHUB_SHA" --commit-dirty=true

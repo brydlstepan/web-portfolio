@@ -201,10 +201,10 @@ The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already 
 
 **Direct Upload, not the Cloudflare Git integration.** The Git integration builds every push to every branch and can only be told to skip (`[skip ci]`). Deploying from GitHub Actions with `wrangler pages deploy` keeps the `[build]` gating used in lossless-web, and Cloudflare never gets access to the repo. A Direct Upload project cannot be switched to the Git integration later — acceptable.
 
-**`*.pages.dev` addresses.** Every deploy also appears at `*.web-portfolio.pages.dev`, including a copy of production.
+**`*.pages.dev` addresses.** Every deploy also appears at `*.web-portfolio-7ca.pages.dev`, including a copy of production.
 
 - Enable Access for preview deployments (one setting)
-- Redirect `web-portfolio.pages.dev` to brydlstepan.cz, or send `X-Robots-Tag: noindex` on it
+- Redirect `web-portfolio-7ca.pages.dev` to brydlstepan.cz, or send `X-Robots-Tag: noindex` on it
 
 **Headers (`_headers`)**
 
