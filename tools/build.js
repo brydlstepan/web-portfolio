@@ -115,6 +115,9 @@ function headers() {
     "https://:project.pages.dev/*",
     "  X-Robots-Tag: noindex, nofollow",
     "",
+    "https://:version.:project.pages.dev/*",
+    "  X-Robots-Tag: noindex, nofollow",
+    "",
   ].join("\n");
 }
 

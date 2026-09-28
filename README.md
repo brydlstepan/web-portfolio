@@ -29,7 +29,7 @@ node tools/build.js --env=dev  # dev build: noindex, robots disallow all
 
 | Branch | Environment | Access |
 |--------|-------------|--------|
-| `Dev` | [dev.brydlstepan.cz](https://dev.brydlstepan.cz) | Cloudflare Access, `noindex` |
+| `Dev` | [dev.brydlstepan.cz](https://dev.brydlstepan.cz) | public, `noindex` |
 | `main` | [brydlstepan.cz](https://brydlstepan.cz) | public |
 
 - `.github/workflows/deploy.yml` builds and uploads to Cloudflare Pages (project `web-portfolio`, Direct Upload, address `web-portfolio-7ca.pages.dev`; the `Dev` branch is `dev.web-portfolio-7ca.pages.dev`).
