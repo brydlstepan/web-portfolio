@@ -1,7 +1,8 @@
-// Content admin. Runs entirely in the browser: reads and writes content/*.json
-// and project images on the Dev branch through the GitHub API, with the user
-// token from /auth/callback. Save = commit to Dev, Preview = commit with
-// [build] (deploys dev.brydlstepan.cz), Publish = merge Dev into main.
+// Content admin (dev.brydlstepan.cz only). Runs entirely in the browser: reads
+// and writes content/*.json and project images on the Dev branch through the
+// GitHub API, with the user token from /auth/callback. Save = commit to Dev,
+// Preview = commit with [build] (deploys dev.brydlstepan.cz). Going live is a
+// manual Dev → main pull request on GitHub; the admin never touches main.
 (() => {
   const CONFIG = {
     owner: "brydlstepan",
@@ -405,46 +406,6 @@
     });
   }
 
-  function onPublish() {
-    run("Publishing…", async () => {
-      if (hasChanges(pendingChanges())) throw new Error("Save or preview your changes first.");
-      const cmp = await gh(`${REPO}/compare/${CONFIG.liveBranch}...${CONFIG.branch}`);
-      if (!cmp.ahead_by) return toast("The live site is already up to date.");
-
-      const list = cmp.commits
-        .slice(-12)
-        .map((c) => `• ${c.commit.message.split("\n")[0]}`)
-        .join("\n");
-      const more = cmp.ahead_by > 12 ? `\n…and ${cmp.ahead_by - 12} more` : "";
-      const ok = confirm(
-        `Publish ${cmp.ahead_by} commit(s) from Dev to the live site?\n\n` +
-          `This includes everything on Dev, code as well as content:\n\n${list}${more}`
-      );
-      if (!ok) return;
-
-      const open = await gh(
-        `${REPO}/pulls?state=open&head=${CONFIG.owner}:${CONFIG.branch}&base=${CONFIG.liveBranch}`
-      );
-      const pr =
-        open[0] ||
-        (await gh(`${REPO}/pulls`, {
-          method: "POST",
-          body: {
-            title: "[build] Publish from admin",
-            head: CONFIG.branch,
-            base: CONFIG.liveBranch,
-            body: "Published from the admin.",
-          },
-        }));
-      await gh(`${REPO}/pulls/${pr.number}/merge`, {
-        method: "PUT",
-        body: { merge_method: "merge", commit_title: `[build] Publish from admin (#${pr.number})` },
-      });
-      await refreshAhead();
-      toast("Published — the live site updates in about a minute.", "ok");
-    });
-  }
-
   // ── Status bar ──────────────────────────────────────────────────────
 
   function updateStatus(busyLabel) {
@@ -465,7 +426,6 @@
 
     $("#btn-save").disabled = state.busy || !dirty || errors.length > 0;
     $("#btn-preview").disabled = state.busy || errors.length > 0;
-    $("#btn-publish").disabled = state.busy || dirty || state.ahead === 0;
 
     const problems = $("#problems");
     problems.hidden = errors.length === 0;
@@ -1104,7 +1064,6 @@
   );
   $("#btn-save").addEventListener("click", onSave);
   $("#btn-preview").addEventListener("click", onPreview);
-  $("#btn-publish").addEventListener("click", onPublish);
   $("#btn-signout").addEventListener("click", () => {
     if (state.content && hasChanges(pendingChanges()) && !confirm("You have unsaved changes. Sign out anyway?")) return;
     state.content = null;

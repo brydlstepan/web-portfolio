@@ -28,8 +28,8 @@ Non-public routes:
 
 | Route | Purpose | Protection |
 | --- | --- | --- |
-| `/admin/` | Content admin | Password (HTTP Basic Auth) + GitHub sign-in |
-| `/auth/*` | GitHub sign-in callback (Pages Function) | — |
+| dev.brydlstepan.cz/admin/ | Content admin (dev only) | Dev password + GitHub sign-in |
+| dev.brydlstepan.cz/auth/* | GitHub sign-in (Pages Functions, dev only) | Dev password |
 | dev.brydlstepan.cz, `*.pages.dev` | Preview of the `Dev` branch | Password (`PREVIEW_PASSWORD`), `noindex` |
 
 ---
@@ -187,15 +187,15 @@ Tags are referenced by `id`, so renaming a label never breaks the projects using
 
 ## 7. Hosting and environments
 
-The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already on Cloudflare, and Pages adds what GitHub Pages cannot: a preview environment per branch, custom response headers, and server functions for the sign-in callback and the admin password.
+The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already on Cloudflare, and Pages adds what GitHub Pages cannot: a preview environment per branch, custom response headers, and server functions for the dev password and the admin's GitHub sign-in.
 
 ```
                      Cloudflare (DNS, proxy)
                                   │
   brydlstepan.cz            ← main   (production)
-  brydlstepan.cz/admin/     ← admin  (password + GitHub sign-in)
-  brydlstepan.cz/auth/*     ← Pages Function: GitHub sign-in callback
   dev.brydlstepan.cz        ← Dev    (preview, password, noindex)
+  dev.brydlstepan.cz/admin/ ← admin  (dev password + GitHub sign-in)
+  dev.brydlstepan.cz/auth/* ← Pages Functions: GitHub sign-in
                                   ▲
                GitHub Actions: build → wrangler pages deploy
 ```
@@ -217,17 +217,17 @@ The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already 
 | Request | Password |
 | --- | --- |
 | dev.brydlstepan.cz, `*.pages.dev` | `PREVIEW_PASSWORD` |
-| `/admin/*` on any host | `ADMIN_PASSWORD` |
-| brydlstepan.cz, www | none |
+| brydlstepan.cz, www | none — `/admin` and `/auth/*` answer 404 there |
 
 - Passwords are GitHub Secrets (`web-portfolio` environment); the build bundles only their SHA-256 hashes into the function, never into `dist/` or git. A missing one locks the area (503) instead of opening it
 - Compared as SHA-256 hashes in constant time
-- The build writes `_routes.json`: dev runs the gate on every path, production only on `/admin/*` — the public site stays plain static files and does not use the Functions request quota
+- The build writes `_routes.json`: dev runs the gate on every path; production runs functions only for `/auth/*` (to refuse it) — the public site stays plain static files and does not use the Functions request quota
+- Production builds leave out `admin/` and get no sign-in config, so the GitHub App secret is never deployed to production
 - Redirect `web-portfolio-7ca.pages.dev` to brydlstepan.cz, or send `X-Robots-Tag: noindex` on it
 
 **Headers (`_headers`)**
 
-- `/admin/*` — strict CSP: `default-src 'self'; connect-src 'self' https://api.github.com; img-src 'self' data: blob:; frame-ancestors 'none'`, plus `Referrer-Policy: no-referrer`
+- The admin's strict CSP (`script-src 'self'`, `connect-src 'self' https://api.github.com`, …) and `Referrer-Policy: no-referrer` are set by the password gate on dev
 - dev deploys — `X-Robots-Tag: noindex` (the dev build also adds `<meta name="robots" content="noindex">`)
 
 **Coexistence with self-hosted services.** The zone also carries private hostnames (e.g. `immich.brydlstepan.cz`) that resolve to LAN/Tailscale addresses, DNS-only.
@@ -249,7 +249,7 @@ The site moves from GitHub Pages to **Cloudflare Pages**. The domain is already 
 | Trigger | Result |
 | --- | --- |
 | Push to `Dev` or `main` with `[build]` in a commit message | Build and deploy that branch |
-| Admin *Preview* / *Publish* | Their commits carry `[build]` |
+| Admin *Preview* | Its commit carries `[build]` |
 | Actions → Deploy → Run workflow | Build and deploy the chosen branch |
 | Any other push | Nothing deployed |
 
@@ -277,25 +277,26 @@ Secrets in GitHub (environment `web-portfolio`): `CLOUDFLARE_API_TOKEN` (Pages: 
 ```
 edit in admin → Save            → commit to Dev (no deploy)
               → Preview         → commit with [build] → dev.brydlstepan.cz
-              → Publish to live → PR Dev → main, merged → brydlstepan.cz
+going live    → pull request Dev → main on GitHub, by hand → brydlstepan.cz
 ```
 
 - Every save is a commit: full history, rollback via git
 - A draft is content that is on `Dev` and not yet on `main`; no separate draft store, `published` stays as a show/hide switch
-- `Dev` holds only work that is ready to go live — *Publish* merges all of it, code included. Unfinished code lives on `feat/*` branches and is merged into `Dev` when done
+- The admin exists only on dev and never touches `main`; releasing is a manual pull request
+- `Dev` holds only work that is ready to go live — a release merges all of it, code included. Unfinished code lives on `feat/*` branches and is merged into `Dev` when done
 - The admin shows how far `Dev` is ahead of `main`, the last deploy, and a link to dev.brydlstepan.cz
 
 ### Sign-in
 
 - **GitHub App** (not an OAuth App), installed only on `web-portfolio`
-  - Permissions: Contents read/write, Pull requests read/write, Metadata read
+  - Permissions: Contents read/write, Metadata read (Pull requests not needed — the admin does not release)
   - User tokens expire after 8 hours; re-sign-in afterwards (no refresh-token handling in v1)
-  - Callback URL: `https://brydlstepan.cz/auth/callback`
+  - Callback URL: `https://dev.brydlstepan.cz/auth/callback`
 - **Pages Function** `functions/auth/`
   - `/auth/login` — redirects to GitHub with a random `state` stored in a short-lived httpOnly cookie
   - `/auth/callback` — checks `state`, exchanges the code for a token with the client secret, redirects to `/admin/#token=…` (fragment, never sent to a server)
   - `AUTH_CLIENT_ID` and `AUTH_CLIENT_SECRET` are GitHub Secrets; the build writes them into `.generated/auth-config.js` (gitignored), bundled into the function and never into `dist/`. Nothing is stored at runtime
-  - Callback URLs registered on the GitHub App: `https://brydlstepan.cz/auth/callback` and `https://dev.brydlstepan.cz/auth/callback`; sign-in on `*.pages.dev` addresses is not supported
+  - Only dev builds get this config; sign-in on production and `*.pages.dev` addresses is not supported
 - **Admin**
   - Reads the token from the fragment, clears the URL, keeps it in `sessionStorage` only
   - Calls `GET /user` and rejects any account other than `brydlstepan`
@@ -320,7 +321,7 @@ edit in admin → Save            → commit to Dev (no deploy)
 
 ### Security layers
 
-1. **Admin password** — HTTP Basic Auth on `/admin/*` in the Pages Function `functions/_middleware.js`; the admin page does not load before it passes. `ADMIN_PASSWORD` is a GitHub Secret; only its hash is bundled, compared in constant time. A Cloudflare rate-limiting rule on `/admin/*` (one is free) slows guessing
+1. **Dev only, behind the dev password** — the admin is not deployed to production at all; on dev, HTTP Basic Auth (`PREVIEW_PASSWORD`, only its hash bundled, compared in constant time) runs before the admin loads. A separate admin password was dropped: GitHub sign-in is the real lock, and the dev password already hides the admin
 2. **GitHub sign-in** plus the `brydlstepan` account check
 3. **GitHub permissions** — the final authority on who can write
 4. **Narrow token** — one repo, contents and PRs only, 8-hour lifetime
@@ -342,7 +343,7 @@ edit in admin → Save            → commit to Dev (no deploy)
 | Sign-in | GitHub App + Cloudflare Pages Function | Narrow, expiring tokens; secret never in the browser |
 | Hosting | Cloudflare Pages, Direct Upload from GitHub Actions | Branch previews, headers, functions |
 | DNS / TLS | Cloudflare | Already in use |
-| Admin gate | HTTP Basic Auth in a Pages Function | Locks the admin before any code loads; no extra product |
+| Dev gate | HTTP Basic Auth in a Pages Function | Locks dev and the admin before any code loads; no extra product |
 | Analytics | Cloudflare Web Analytics | Free, cookieless, no consent banner needed |
 
 ### Analytics
@@ -389,7 +390,7 @@ An honest review of the choices above.
 ### Issues found, with fixes
 
 **1. A public admin is an attack surface.**
-**Fix:** layered protection (§9) — admin password first, then GitHub sign-in with an account check, a narrow expiring token, strict CSP, and a path allowlist.
+**Fix:** layered protection (§9) — dev-only, dev password first, then GitHub sign-in with an account check, a narrow expiring token, strict CSP, and a path allowlist.
 
 **2. Token theft through XSS on the admin.**
 A token in the page is only as safe as the page.
@@ -398,7 +399,7 @@ A token in the page is only as safe as the page.
 **3. Drafts on `Dev` are readable while the repo is public.**
 Accepted — drafts do not need to be secret, and a public repo keeps branch protection free.
 
-**4. *Publish* also ships unfinished code on `Dev`.**
+**4. A release also ships unfinished code on `Dev`.**
 **Fix:** `Dev` holds only release-ready work; code in progress lives on `feat/*` branches.
 
 **5. Duplicate and open copies on `*.pages.dev`.**
@@ -421,7 +422,7 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 ### Trade-offs accepted
 
 - **Two services** — GitHub for code and content, Cloudflare for hosting and access; one API token connects them
-- **Edits reach production in two steps** (*Preview*, then *Publish*) — deliberate, it is the review step
+- **Edits reach production in two steps** (*Preview* on dev, then a manual pull request) — deliberate, it is the review step
 - **Re-sign-in every 8 hours** — simpler than refresh-token handling
 - **A build step exists** — more than "edit HTML and commit", but it removes duplication and the SEO problem
 
@@ -442,12 +443,12 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 
 | Question | Decision |
 | --- | --- |
-| Admin | Own online admin at `/admin/`, GitHub sign-in via a GitHub App |
+| Admin | Own admin at dev.brydlstepan.cz/admin/ only, GitHub sign-in via a GitHub App; no publish button — releases are manual pull requests |
 | Drafts | `Dev` branch is the draft space; no separate store |
 | Repo visibility | Public — drafts on `Dev` may be read; free branch protection on `main` |
 | Hosting | Cloudflare Pages, Direct Upload from GitHub Actions |
 | Environments | `Dev` → dev.brydlstepan.cz (password, noindex), `main` → brydlstepan.cz |
-| Password gates | Basic Auth Pages Function: `PREVIEW_PASSWORD` on dev and `*.pages.dev`, `ADMIN_PASSWORD` on `/admin/*`; Cloudflare Access / Zero Trust not used |
+| Password gate | Basic Auth Pages Function: `PREVIEW_PASSWORD` on dev and `*.pages.dev`, admin included; no separate admin password; Cloudflare Access / Zero Trust not used |
 | Deploy trigger | `[build]` in a commit message, or manual run |
 | Release | PR `Dev` → `main`, merge commit, `[build]` title |
 | Project detail | Modal with media gallery, from v1 |
@@ -479,10 +480,10 @@ Currently **Full** (automatic mode). The GitHub Pages origin has no valid certif
 7. **Environments** — ✅ dev.brydlstepan.cz, `_headers`, `noindex`, password gate on dev; ⬜ production custom domain
 8. **Switch over** — disable GitHub Pages, remove `CNAME` and `.nojekyll` if unneeded, verify TLS
 9. ✅ **Sign-in functions** — `/auth/login`, `/auth/callback` (⬜ GitHub App itself: manual step)
-10. ✅ **Admin: shell** — password middleware on `/admin/*`, sign-in, account check, CSP
+10. ✅ **Admin: shell** — dev-only, behind the dev password, sign-in, account check, CSP
 11. ✅ **Admin: editors** — Projects, Tags, Site
 12. ✅ **Admin: images** — resize, WebP, single-commit saves, cleanup of unused images
-13. ✅ **Admin: Preview / Publish** — `[build]` commits, PR and merge, `Dev` vs `main` status
+13. ✅ **Admin: Preview** — `[build]` commits, `Dev` vs `main` status (releasing stays a manual pull request)
 14. **Hardening** — branch protection on `main`, README deployment section
 15. **Content pass** — real projects, real copy
 
@@ -493,8 +494,8 @@ The current under-construction page stays live until step 15.
 | Step | Where |
 | --- | --- |
 | Create the Pages project and API token | Cloudflare dashboard |
-| Add custom domains; rate-limiting rule on `/admin/*` | Cloudflare dashboard |
-| Add `PREVIEW_PASSWORD`, `ADMIN_PASSWORD` secrets | GitHub → Settings → Environments |
+| Add custom domains | Cloudflare dashboard |
+| Add `PREVIEW_PASSWORD` secret | GitHub → Settings → Environments |
 | Add `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` secrets | GitHub → Settings → Environments |
 | Create and install the GitHub App, generate client secret | GitHub → Settings → Developer settings |
 | Add `AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET` secrets | GitHub → Settings → Environments |

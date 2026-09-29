@@ -14,7 +14,6 @@
     <div class="bar__actions" id="actions" hidden>
       <button type="button" class="btn btn--primary" id="btn-save" disabled>Save</button>
       <button type="button" class="btn" id="btn-preview">Preview on dev</button>
-      <button type="button" class="btn" id="btn-publish">Publish to live</button>
       <span class="bar__user" id="user"></span>
       <button type="button" class="btn btn--ghost" id="btn-signout">Sign out</button>
     </div>
@@ -23,7 +22,7 @@
   <main class="main">
     <section class="signin" id="signin" hidden>
       <h1>Sign in</h1>
-      <p>Edits are saved as commits to the <code>Dev</code> branch of <code>brydlstepan/web-portfolio</code>.</p>
+      <p>Edits are saved as commits to the <code>Dev</code> branch of <code>brydlstepan/web-portfolio</code>. Going live is a pull request from <code>Dev</code> to <code>main</code>, made on GitHub.</p>
       <a class="btn btn--primary" href="/auth/login">Sign in with GitHub</a>
       <p class="error" id="signin-error" role="alert"></p>
     </section>

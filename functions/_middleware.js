@@ -1,16 +1,18 @@
 // Password gate (HTTP Basic Auth) for Cloudflare Pages.
 //
-//   dev.brydlstepan.cz, *.pages.dev  → PREVIEW_PASSWORD
-//   /admin/* on any host             → ADMIN_PASSWORD
-//   brydlstepan.cz, www              → public
+//   dev.brydlstepan.cz, *.pages.dev  → PREVIEW_PASSWORD (the admin included)
+//   brydlstepan.cz, www              → public; /admin and /auth do not exist
 //
-// The passwords live in GitHub Secrets. tools/build.js writes only their
-// SHA-256 hashes into .generated/gate-config.js, which is bundled into this
+// The admin and GitHub sign-in are dev-only: production builds leave out
+// admin/, and /auth/* answers 404 on production hosts.
+//
+// The password lives in GitHub Secrets. tools/build.js writes only its
+// SHA-256 hash into .generated/gate-config.js, which is bundled into this
 // function at deploy time and never committed or served. A missing password
-// locks the gated area instead of opening it. Which paths run this at all is
-// set by _routes.json, also written by tools/build.js.
+// locks dev instead of opening it. Which paths run this at all is set by
+// _routes.json, also written by tools/build.js.
 
-import { PREVIEW_PASSWORD_SHA256, ADMIN_PASSWORD_SHA256 } from "../.generated/gate-config.js";
+import { PREVIEW_PASSWORD_SHA256 } from "../.generated/gate-config.js";
 
 const PRODUCTION_HOSTS = new Set(["brydlstepan.cz", "www.brydlstepan.cz"]);
 
@@ -65,19 +67,21 @@ function challenge(realm) {
   });
 }
 
+const isUnder = (pathname, dir) => pathname === dir || pathname.startsWith(`${dir}/`);
+
 export async function onRequest({ request, next }) {
   const url = new URL(request.url);
-  const isAdmin = url.pathname === "/admin" || url.pathname.startsWith("/admin/");
-  const isPreview = !PRODUCTION_HOSTS.has(url.hostname);
+  const isAdmin = isUnder(url.pathname, "/admin");
 
-  const gate = isAdmin
-    ? { hash: ADMIN_PASSWORD_SHA256, realm: "brydlstepan admin" }
-    : isPreview
-      ? { hash: PREVIEW_PASSWORD_SHA256, realm: "brydlstepan dev" }
-      : null;
-  if (!gate) return next();
+  if (PRODUCTION_HOSTS.has(url.hostname)) {
+    // The admin and its sign-in are dev-only.
+    if (isAdmin || isUnder(url.pathname, "/auth")) {
+      return new Response("Not found.", { status: 404, headers: { "Cache-Control": "no-store" } });
+    }
+    return next();
+  }
 
-  if (!gate.hash) {
+  if (!PREVIEW_PASSWORD_SHA256) {
     return new Response("Locked: password not configured.", {
       status: 503,
       headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" },
@@ -85,7 +89,7 @@ export async function onRequest({ request, next }) {
   }
 
   const given = passwordFrom(request);
-  if (given === null || !(await matches(given, gate.hash))) return challenge(gate.realm);
+  if (given === null || !(await matches(given, PREVIEW_PASSWORD_SHA256))) return challenge("brydlstepan dev");
 
   const response = await next();
   const gated = new Response(response.body, response);
