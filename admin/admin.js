@@ -169,7 +169,15 @@
       try {
         message = (await res.json()).message || "";
       } catch {}
-      const err = new Error(message || `GitHub returned ${res.status}`);
+      // Name the request, so a failure says which permission or rule is missing.
+      const where = `${method} ${path.replace(REPO, "").split("?")[0]}`;
+      // The repo is public, so reads work even when the GitHub App is not
+      // installed on it; writes then fail with this message.
+      const hint =
+        res.status === 403 && /not accessible by integration/i.test(message)
+          ? ` Check that the GitHub App is installed on ${CONFIG.owner}/${CONFIG.repo} with Contents: Read and write, then sign in again.`
+          : "";
+      const err = new Error(`${message || "GitHub error"} (${res.status}, ${where}).${hint}`);
       err.status = res.status;
       throw err;
     }
