@@ -2,12 +2,20 @@
   {
     "id": "archviz",
     "title": "Archviz",
-    "tags": ["unreal", "3d", "ar-vr", "visualization", "large"],
+    "tags": [
+      "unreal",
+      "3d",
+      "ar-vr",
+      "visualization",
+      "large"
+    ],
     "summary": "Realtime VR walkthroughs of architecture that does not exist yet.",
     "description": "Unbuilt buildings presented as immersive VR walkthroughs — spatial scale, materials, and light readable at full scale before anything is constructed.",
     "year": 2024,
     "role": "Realtime visualization, VR",
-    "tools": ["Unreal Engine"],
+    "tools": [
+      "Unreal Engineeeeeeeeee"
+    ],
     "cover": "assets/projects/placeholders/viz.svg",
     "gallery": [
       {
@@ -23,12 +31,18 @@
   {
     "id": "wild-science",
     "title": "Wild Science",
-    "tags": ["unreal", "3d", "large"],
+    "tags": [
+      "unreal",
+      "3d",
+      "large"
+    ],
     "summary": "Six-episode series on the hidden traits and remarkable abilities of selected animals.",
     "description": "A documentary-style Unreal production covering traits that are well known in science but rarely captured on screen — each episode built around one species and its underexplored skills.",
     "year": 2026,
     "role": "Realtime 3D, series production",
-    "tools": ["Unreal Engine"],
+    "tools": [
+      "Unreal Engine"
+    ],
     "cover": "assets/projects/placeholders/viz.svg",
     "gallery": [
       {
@@ -44,12 +58,20 @@
   {
     "id": "vr-showroom",
     "title": "VR Showroom",
-    "tags": ["unreal", "3d", "ar-vr", "visualization", "medium"],
+    "tags": [
+      "unreal",
+      "3d",
+      "ar-vr",
+      "visualization",
+      "medium"
+    ],
     "summary": "VR for teaching and presenting ideas, objects, and spaces that are hard to grasp or costly to show in person.",
     "description": "An educational VR showroom — abstract concepts, fragile artifacts, and large-scale environments presented interactively when physical demos are impractical or impossible.",
     "year": 2026,
     "role": "VR development, visualization",
-    "tools": ["Unreal Engine"],
+    "tools": [
+      "Unreal Engine"
+    ],
     "cover": "assets/projects/placeholders/viz.svg",
     "gallery": [
       {
@@ -65,12 +87,19 @@
   {
     "id": "dinopark-vr",
     "title": "Dinopark VR",
-    "tags": ["unreal", "3d", "ar-vr", "medium"],
+    "tags": [
+      "unreal",
+      "3d",
+      "ar-vr",
+      "medium"
+    ],
     "summary": "Short VR animated film spanning three dinosaur epochs.",
     "description": "A compact VR experience — stylized prehistoric worlds from three geological periods, told as a single immersive animated short.",
     "year": 2025,
     "role": "VR animation, environment art",
-    "tools": ["Unreal Engine"],
+    "tools": [
+      "Unreal Engine"
+    ],
     "cover": "assets/projects/placeholders/neon.svg",
     "gallery": [
       {
@@ -86,12 +115,19 @@
   {
     "id": "soma",
     "title": "SOMA",
-    "tags": ["unreal", "3d", "visualization", "medium"],
+    "tags": [
+      "unreal",
+      "3d",
+      "visualization",
+      "medium"
+    ],
     "summary": "Product visualization spot.",
     "description": "A focused realtime product spot — lighting, materials, and camera work built around a single hero asset.",
     "year": 2024,
     "role": "Product visualization",
-    "tools": ["Unreal Engine"],
+    "tools": [
+      "Unreal Engine"
+    ],
     "cover": "assets/projects/placeholders/viz.svg",
     "gallery": [
       {
@@ -107,12 +143,19 @@
   {
     "id": "kleeya",
     "title": "Kleeya",
-    "tags": ["unreal", "3d", "visualization", "medium"],
+    "tags": [
+      "unreal",
+      "3d",
+      "visualization",
+      "medium"
+    ],
     "summary": "Product visualization spot.",
     "description": "A focused realtime product spot — lighting, materials, and camera work built around a single hero asset.",
     "year": 2023,
     "role": "Product visualization",
-    "tools": ["Unreal Engine"],
+    "tools": [
+      "Unreal Engine"
+    ],
     "cover": "assets/projects/placeholders/viz.svg",
     "gallery": [
       {
@@ -128,12 +171,19 @@
   {
     "id": "portfolio-shell",
     "title": "This Portfolio",
-    "tags": ["web", "medium"],
+    "tags": [
+      "web",
+      "medium"
+    ],
     "summary": "The site you're looking at — static, tagged, and pre-rendered.",
     "description": "A black-and-white one-pager with frosted glass and tag filters, pre-rendered at build time and deployed through GitHub Actions. Free to host, previewed on its own dev environment, and edited through a small admin of its own rather than a third-party CMS.",
     "year": 2026,
     "role": "Design, front-end",
-    "tools": ["HTML", "CSS", "JavaScript"],
+    "tools": [
+      "HTML",
+      "CSS",
+      "JavaScript"
+    ],
     "cover": "assets/projects/placeholders/web.svg",
     "gallery": [
       {
@@ -143,7 +193,10 @@
       }
     ],
     "links": [
-      { "label": "GitHub", "url": "https://github.com/brydlstepan/web-portfolio" }
+      {
+        "label": "GitHub",
+        "url": "https://github.com/brydlstepan/web-portfolio"
+      }
     ],
     "order": 7,
     "published": true
