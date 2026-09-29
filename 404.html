@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Page not found — brydlstepan</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23fff'/%3E%3Crect x='10' y='10' width='12' height='12' rx='2' fill='%23000'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Absolute paths: this page is served for any missing URL, at any depth. -->
+  <link rel="stylesheet" href="/css/site.css">
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
+</head>
+<body data-page="404">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/">brydlstepan</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="not-found">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="not-found__body">
+        <p class="not-found__code" aria-hidden="true">404</p>
+        <h1 class="not-found__title">This page doesn't exist.</h1>
+        <p class="not-found__text">The link is broken, or the page was rendered out of existence. The projects are still where they were.</p>
+        <a class="btn" href="/#work">↳ Back to the projects</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

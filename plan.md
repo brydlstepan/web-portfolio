@@ -20,6 +20,7 @@ Personal portfolio for **brydlstepan.cz**. Static public site on Cloudflare Page
 | Route | Type | Purpose |
 | --- | --- | --- |
 | `/` | One-pager | Hero, Work, About, AI, Contact |
+| any missing URL | `404.html` | Not-found page with a way back to the projects (a real 404 status, not the homepage) |
 | Instagram | External | Photography |
 | GitHub | External | Code |
 | LinkedIn | External | Professional profile |

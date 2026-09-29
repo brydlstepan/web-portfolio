@@ -6,6 +6,7 @@ Portfolio of brydlstepan — [brydlstepan.cz](https://brydlstepan.cz). See [plan
 
 ```
 index.html        page template (also works as-is: site.js renders content in the browser)
+404.html          page for missing URLs (Cloudflare Pages and GitHub Pages serve it automatically)
 content/*.json    site copy, tags, projects
 js/render.js      content → HTML renderers, shared by the browser and the build
 js/validate-content.js  content rules, shared by the build and the admin

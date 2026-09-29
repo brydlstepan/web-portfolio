@@ -164,7 +164,7 @@ function checkReferences(html) {
   const missing = [];
   for (const [, ref] of html.matchAll(/\b(?:src|href)="([^"]+)"/g)) {
     if (/^(?:[a-z]+:|#|\/\/)/i.test(ref)) continue;
-    const file = decodeURIComponent(ref.split(/[?#]/)[0]);
+    const file = decodeURIComponent(ref.split(/[?#]/)[0]).replace(/^\//, "");
     if (!file || file === "index.html") continue;
     if (!fs.existsSync(path.join(OUT, file))) missing.push(ref);
   }
@@ -197,6 +197,10 @@ function main() {
     });
   }
   fs.writeFileSync(path.join(OUT, "index.html"), html);
+  // Served by Cloudflare Pages for any missing URL; without it Pages would
+  // answer every unknown path with index.html and a 200.
+  const notFound = fs.readFileSync(path.join(ROOT, "404.html"), "utf8");
+  fs.writeFileSync(path.join(OUT, "404.html"), notFound);
   fs.writeFileSync(
     path.join(OUT, "robots.txt"),
     ENV === "dev"
@@ -208,8 +212,10 @@ function main() {
   fs.writeFileSync(path.join(OUT, "_routes.json"), JSON.stringify(routes(), null, 2) + "\n");
   writeFunctionConfig();
 
-  const missing = checkReferences(html);
-  if (missing.length) fail(`missing files referenced by index.html: ${missing.join(", ")}`);
+  for (const [name, page] of [["index.html", html], ["404.html", notFound]]) {
+    const missing = checkReferences(page);
+    if (missing.length) fail(`missing files referenced by ${name}: ${missing.join(", ")}`);
+  }
 
   console.log(`Built ${ENV} site into dist/.`);
 }

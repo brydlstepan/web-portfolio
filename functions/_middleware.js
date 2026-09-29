@@ -69,15 +69,22 @@ function challenge(realm) {
 
 const isUnder = (pathname, dir) => pathname === dir || pathname.startsWith(`${dir}/`);
 
-export async function onRequest({ request, next }) {
+// The site's own 404 page, with a 404 status; plain text if it cannot be read.
+async function notFound(request, env) {
+  try {
+    const page = await env.ASSETS.fetch(new URL("/404.html", request.url));
+    if (page.ok) return new Response(page.body, { status: 404, headers: page.headers });
+  } catch {}
+  return new Response("Not found.", { status: 404, headers: { "Cache-Control": "no-store" } });
+}
+
+export async function onRequest({ request, env, next }) {
   const url = new URL(request.url);
   const isAdmin = isUnder(url.pathname, "/admin");
 
   if (PRODUCTION_HOSTS.has(url.hostname)) {
     // The admin and its sign-in are dev-only.
-    if (isAdmin || isUnder(url.pathname, "/auth")) {
-      return new Response("Not found.", { status: 404, headers: { "Cache-Control": "no-store" } });
-    }
+    if (isAdmin || isUnder(url.pathname, "/auth")) return notFound(request, env);
     return next();
   }
 
