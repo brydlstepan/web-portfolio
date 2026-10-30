@@ -73,6 +73,108 @@
     });
   }
 
+  // Glass Surface for the top bar: SVG backdrop displacement in Chromium,
+  // enhanced blur fallback in Safari/Firefox. See reactbits.dev/components/glass-surface.
+  function setupHeaderGlass() {
+    const bar = $(".site-header__inner");
+    if (!bar) return;
+
+    const FILTER_ID = "header-glass-filter";
+    const RED_GRAD = "header-glass-red";
+    const BLUE_GRAD = "header-glass-blue";
+
+    const supportsSvgBackdrop = () => {
+      const ua = navigator.userAgent;
+      const isWebkit = /Safari/.test(ua) && !/Chrome/.test(ua) && !/Chromium/.test(ua);
+      const isFirefox = /Firefox/.test(ua);
+      if (isWebkit || isFirefox) return false;
+      const probe = document.createElement("div");
+      probe.style.backdropFilter = `url(#${FILTER_ID})`;
+      return probe.style.backdropFilter !== "";
+    };
+
+    if (!supportsSvgBackdrop()) {
+      bar.classList.add("is-glass-fallback");
+      return;
+    }
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.classList.add("site-header__glass-filter");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = `
+      <defs>
+        <filter id="${FILTER_ID}" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%">
+          <feImage x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map"></feImage>
+          <feDisplacementMap in="SourceGraphic" in2="map" scale="-72" xChannelSelector="R" yChannelSelector="G" result="dispRed"></feDisplacementMap>
+          <feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"></feColorMatrix>
+          <feDisplacementMap in="SourceGraphic" in2="map" scale="-66" xChannelSelector="R" yChannelSelector="G" result="dispGreen"></feDisplacementMap>
+          <feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"></feColorMatrix>
+          <feDisplacementMap in="SourceGraphic" in2="map" scale="-60" xChannelSelector="R" yChannelSelector="G" result="dispBlue"></feDisplacementMap>
+          <feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"></feColorMatrix>
+          <feBlend in="red" in2="green" mode="screen" result="rg"></feBlend>
+          <feBlend in="rg" in2="blue" mode="screen" result="output"></feBlend>
+          <feGaussianBlur in="output" stdDeviation="0.9"></feGaussianBlur>
+        </filter>
+      </defs>
+    `;
+    bar.prepend(svg);
+
+    const feImage = svg.querySelector("feImage");
+    const channels = svg.querySelectorAll("feDisplacementMap");
+
+    const borderRadius = 20;
+    // Edge band where refraction lives; center is neutralized to mid-gray (#808080).
+    const edgeRatio = 0.34;
+    const mixBlendMode = "difference";
+    const distortionScale = -72;
+
+    const updateMap = () => {
+      const rect = bar.getBoundingClientRect();
+      const w = Math.max(1, Math.round(rect.width));
+      const h = Math.max(1, Math.round(rect.height));
+      const edge = Math.min(w, h) * edgeRatio;
+      const innerX = edge;
+      const innerY = Math.min(edge, h * 0.28);
+      const innerW = Math.max(0, w - innerX * 2);
+      const innerH = Math.max(0, h - innerY * 2);
+      const soft = Math.max(8, edge * 0.55);
+      const map = `
+        <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="${RED_GRAD}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ff0000"/>
+              <stop offset="18%" stop-color="#808080"/>
+              <stop offset="82%" stop-color="#808080"/>
+              <stop offset="100%" stop-color="#0000ff"/>
+            </linearGradient>
+            <linearGradient id="${BLUE_GRAD}" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#00ff00"/>
+              <stop offset="22%" stop-color="#808080"/>
+              <stop offset="78%" stop-color="#808080"/>
+              <stop offset="100%" stop-color="#ff00ff"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="${w}" height="${h}" fill="#808080"></rect>
+          <rect x="0" y="0" width="${w}" height="${h}" rx="${borderRadius}" fill="url(#${RED_GRAD})" />
+          <rect x="0" y="0" width="${w}" height="${h}" rx="${borderRadius}" fill="url(#${BLUE_GRAD})" style="mix-blend-mode:${mixBlendMode}" />
+          <rect x="${innerX}" y="${innerY}" width="${innerW}" height="${innerH}" rx="${borderRadius}" fill="#808080" style="filter:blur(${soft}px)" />
+        </svg>
+      `;
+      feImage?.setAttribute("href", `data:image/svg+xml,${encodeURIComponent(map)}`);
+      channels.forEach((node, i) => {
+        node.setAttribute("scale", String(distortionScale + i * 6));
+        node.setAttribute("xChannelSelector", "R");
+        node.setAttribute("yChannelSelector", "G");
+      });
+    };
+
+    bar.classList.add("is-glass-svg");
+    updateMap();
+    const ro = new ResizeObserver(() => updateMap());
+    ro.observe(bar);
+  }
+
   function createStringPluck(svg, host, options = {}) {
     if (!svg || !host) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -392,6 +494,257 @@
       head.addEventListener("pointermove", onMove);
       head.addEventListener("pointerleave", onLeave);
     });
+  }
+
+  // Gooey SVG text reveal — vanilla mimic of bleibtgleich's SplitText + goo filter.
+  // After reveal, proximity to the slime cursor tints the heading blue, then it
+  // fades back when the pointer leaves.
+  function setupGooHeadings() {
+    const headings = $$(".section__head > h2");
+    if (!headings.length) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const BLUR = 22;
+    const AMP = 16;
+    const OFF = -6;
+    const DURATION = 1500;
+    const MELT_REACH = 110;
+
+    const matrixValues = (amp, off) =>
+      `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${amp} ${off}`;
+
+    let defs = document.getElementById("goo-defs");
+    if (!defs) {
+      defs = document.createElementNS(SVG_NS, "svg");
+      defs.id = "goo-defs";
+      defs.classList.add("goo-defs");
+      defs.setAttribute("aria-hidden", "true");
+      document.body.prepend(defs);
+    }
+
+    const ensureFilter = (line) => {
+      if (line.dataset.filterId) return line.dataset.filterId;
+      const id = `goo-${Math.random().toString(36).slice(2, 11)}`;
+      line.dataset.filterId = id;
+      const filter = document.createElementNS(SVG_NS, "filter");
+      filter.setAttribute("id", id);
+      filter.setAttribute("x", "-50%");
+      filter.setAttribute("y", "-50%");
+      filter.setAttribute("width", "200%");
+      filter.setAttribute("height", "200%");
+      filter.setAttribute("color-interpolation-filters", "sRGB");
+      filter.innerHTML = `
+        <feGaussianBlur in="SourceGraphic" stdDeviation="${BLUR}" result="blur"></feGaussianBlur>
+        <feColorMatrix in="blur" mode="matrix" values="${matrixValues(AMP, OFF)}" result="goo"></feColorMatrix>
+      `;
+      defs.appendChild(filter);
+      line.style.filter = `url(#${id})`;
+      return id;
+    };
+
+    const lineFilterParts = (line) => {
+      const id = ensureFilter(line);
+      return {
+        id,
+        blurEl: document.querySelector(`#${CSS.escape(id)} feGaussianBlur`),
+        matrixEl: document.querySelector(`#${CSS.escape(id)} feColorMatrix`),
+      };
+    };
+
+    const prepare = (heading) => {
+      if (heading.dataset.gooReady) return $$(".goo-line", heading);
+      heading.dataset.gooReady = "1";
+      if (!heading.getAttribute("aria-label")) {
+        heading.setAttribute("aria-label", heading.textContent.trim());
+      }
+      const html = heading.innerHTML.trim();
+      heading.innerHTML = `<span class="goo-line">${html}</span>`;
+      const lines = $$(".goo-line", heading);
+      lines.forEach(ensureFilter);
+      return lines;
+    };
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    /** Apply melt 0 (crisp type) → 1 (blue heading — no blur). */
+    const applyMeltOn = (state, melt) => {
+      const m = Math.max(0, Math.min(1, melt));
+      state.melt = m;
+      state.heading.classList.toggle("is-goo-melting", m > 0.02);
+
+      state.lines.forEach((line) => {
+        if (m < 0.008) {
+          line.style.color = "";
+          return;
+        }
+        line.style.color = m < 0.15
+          ? `color-mix(in srgb, var(--text) ${((1 - m / 0.15) * 100).toFixed(1)}%, var(--accent-bright) ${((m / 0.15) * 100).toFixed(1)}%)`
+          : "var(--accent-bright)";
+      });
+    };
+
+    const revealLine = (line, delayMs, onDone) => {
+      const { id, blurEl, matrixEl } = lineFilterParts(line);
+      if (!blurEl || !matrixEl) {
+        onDone?.();
+        return;
+      }
+
+      blurEl.setAttribute("stdDeviation", String(BLUR));
+      matrixEl.setAttribute("values", matrixValues(AMP, OFF));
+      line.style.filter = `url(#${id})`;
+      line.style.opacity = "1";
+
+      const startAt = performance.now() + delayMs;
+      const tick = (now) => {
+        if (now < startAt) {
+          requestAnimationFrame(tick);
+          return;
+        }
+        const t = Math.min(1, (now - startAt) / DURATION);
+        const e = easeOutCubic(t);
+        blurEl.setAttribute("stdDeviation", String(BLUR * (1 - e)));
+
+        // Matrix collapses in the last ~35% of the blur, like the reference.
+        const mT = Math.min(1, Math.max(0, (t - 0.65) / 0.35));
+        const mE = easeOutCubic(mT);
+        const amp = AMP + (1 - AMP) * mE;
+        const off = OFF + (0 - OFF) * mE;
+        matrixEl.setAttribute("values", matrixValues(amp, off));
+
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          blurEl.setAttribute("stdDeviation", "0");
+          matrixEl.setAttribute("values", matrixValues(1, 0));
+          line.style.filter = "none";
+          onDone?.();
+        }
+      };
+      requestAnimationFrame(tick);
+    };
+
+    /** @type {{ heading: HTMLElement, lines: HTMLElement[], revealed: boolean, melt: number, targetMelt: number }[]} */
+    const states = [];
+
+    headings.forEach((heading) => {
+      const lines = prepare(heading);
+      if (reduced) {
+        lines.forEach((line) => {
+          line.style.filter = "none";
+          line.style.opacity = "1";
+        });
+        return;
+      }
+
+      const state = {
+        heading,
+        lines,
+        revealed: false,
+        melt: 0,
+        targetMelt: 0,
+      };
+      states.push(state);
+
+      heading.classList.add("is-goo-pending");
+      heading.classList.add("is-goo-interactive");
+      lines.forEach((line) => {
+        ensureFilter(line);
+        line.style.opacity = "0";
+      });
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            heading.classList.remove("is-goo-pending");
+            let pending = lines.length;
+            lines.forEach((line, i) =>
+              revealLine(line, i * 100, () => {
+                pending -= 1;
+                if (pending <= 0) {
+                  state.revealed = true;
+                }
+              })
+            );
+            io.disconnect();
+          });
+        },
+        { threshold: 0.35, rootMargin: "0px 0px -8% 0px" }
+      );
+      io.observe(heading);
+    });
+
+    if (!finePointer || !states.length) return;
+
+    let pointerX = 0;
+    let pointerY = 0;
+    let pointerInside = false;
+    let meltRaf = 0;
+
+    const nearestOnRect = (px, py, rect) => ({
+      x: Math.max(rect.left, Math.min(px, rect.right)),
+      y: Math.max(rect.top, Math.min(py, rect.bottom)),
+    });
+
+    const meltTick = () => {
+      let maxDelta = 0;
+
+      states.forEach((state) => {
+        if (!state.revealed || !pointerInside) {
+          state.targetMelt = 0;
+        } else {
+          // Measured live: project filters shift headings without a scroll.
+          const rect = state.heading.getBoundingClientRect();
+          if (rect.width < 2) {
+            state.targetMelt = 0;
+          } else {
+            const hit = nearestOnRect(pointerX, pointerY, rect);
+            const d = Math.hypot(pointerX - hit.x, pointerY - hit.y);
+            state.targetMelt = Math.max(0, 1 - d / MELT_REACH) ** 1.65;
+          }
+        }
+
+        const next = state.melt + (state.targetMelt - state.melt) * 0.14;
+        maxDelta = Math.max(maxDelta, Math.abs(state.targetMelt - state.melt));
+        if (Math.abs(next - state.melt) > 0.001 || state.targetMelt > 0.01) {
+          applyMeltOn(state, next);
+        } else if (state.melt !== 0 && state.targetMelt < 0.01) {
+          applyMeltOn(state, 0);
+        }
+      });
+
+      // Settled, also while hovering a heading; the next pointer move or scroll wakes it.
+      if (maxDelta < 0.004) {
+        meltRaf = 0;
+        return;
+      }
+      meltRaf = requestAnimationFrame(meltTick);
+    };
+
+    const wakeMelt = () => {
+      if (!meltRaf) meltRaf = requestAnimationFrame(meltTick);
+    };
+
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        pointerX = e.clientX;
+        pointerY = e.clientY;
+        pointerInside = true;
+        wakeMelt();
+      },
+      { passive: true }
+    );
+    // pointerleave doesn't reach window listeners; the root element gets it.
+    document.documentElement.addEventListener("pointerleave", () => {
+      pointerInside = false;
+      wakeMelt();
+    });
+    window.addEventListener("scroll", wakeMelt, { passive: true });
+    window.addEventListener("resize", wakeMelt);
   }
 
   function setupHeroWordmark() {
@@ -1445,10 +1798,10 @@
     setupHeroWordmark();
     setupHeroFibonacciStrings();
     setupSectionHeadGrids();
+    setupGooHeadings();
     slime?.refresh();
 
     const modal = createModalController(projects, tagsById);
-
     $("#project-grid")?.addEventListener("click", (e) => {
       const card = e.target.closest(".project-card");
       if (card) modal.open(card.dataset.projectId);
@@ -1467,6 +1820,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     setupNav();
     setupTheme();
+    setupHeaderGlass();
     init(setupSiteSlime()).catch(console.error);
   });
 })();

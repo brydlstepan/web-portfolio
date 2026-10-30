@@ -169,12 +169,68 @@ button {
   gap: 1rem;
   min-height: 3.25rem;
   position: relative;
+  isolation: isolate;
   background: var(--header-bg);
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid var(--header-border);
   border-radius: var(--radius);
   box-shadow: var(--header-shadow);
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Glass Surface (reactbits): SVG displacement where supported, blur elsewhere. */
+.site-header__glass-filter {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  z-index: -1;
+}
+
+.site-header__inner.is-glass-svg {
+  --glass-saturation: 1.35;
+  background: color-mix(in srgb, #0a0a0c 38%, transparent);
+  border-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px) url(#header-glass-filter) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(10px) url(#header-glass-filter) saturate(var(--glass-saturation));
+  box-shadow:
+    0 0 2px 1px color-mix(in oklch, white, transparent 80%) inset,
+    0 0 8px 3px color-mix(in oklch, white, transparent 91%) inset,
+    var(--header-shadow);
+}
+
+html[data-theme="light"] .site-header__inner.is-glass-svg {
+  background: color-mix(in srgb, #ffffff 42%, transparent);
+  border-color: rgba(20, 20, 28, 0.12);
+  box-shadow:
+    0 0 2px 1px color-mix(in oklch, black, transparent 88%) inset,
+    0 0 10px 4px color-mix(in oklch, black, transparent 92%) inset,
+    var(--header-shadow);
+}
+
+.site-header__inner.is-glass-fallback {
+  background: rgba(10, 10, 12, 0.38);
+  backdrop-filter: blur(12px) saturate(1.55) brightness(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.55) brightness(1.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.04),
+    var(--header-shadow);
+}
+
+html[data-theme="light"] .site-header__inner.is-glass-fallback {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(12px) saturate(1.5) brightness(1.04);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5) brightness(1.04);
+  border-color: rgba(20, 20, 28, 0.12);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.2),
+    var(--header-shadow);
 }
 
 .brand {
@@ -312,7 +368,8 @@ button {
   isolation: isolate;
   padding: 5.5rem 0;
   border-bottom: 1px solid var(--border);
-  overflow: clip;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .section:last-of-type {
@@ -384,6 +441,37 @@ button {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
+}
+
+/* Gooey heading reveal (bleibtgleich-style, no GSAP). */
+.section__head > h2.is-goo-pending .goo-line {
+  opacity: 0;
+}
+
+.section__head > h2.is-goo-interactive {
+  cursor: default;
+}
+
+.section__head > h2.is-goo-melting {
+  overflow: visible;
+}
+
+.section__head > h2.is-goo-melting .goo-line {
+  opacity: 1 !important;
+  will-change: color;
+}
+
+.section__head > h2 .goo-line {
+  display: block;
+  will-change: filter;
+  transition: color 0.05s linear;
+}
+
+.goo-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .section__lede {
